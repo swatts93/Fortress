@@ -1,0 +1,56 @@
+{
+  "description": "Fortress v2 deterministic KDF test vectors. Any conforming implementation MUST reproduce these given identical inputs.",
+  "inputs": {
+    "password_utf8": "correct horse battery staple",
+    "salt_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "nonce_seed_hex": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+    "argon2id": {
+      "time_cost": 4,
+      "memory_cost_kib": 131072,
+      "parallelism": 4
+    },
+    "scrypt": {
+      "N": 131072,
+      "r": 8,
+      "p": 1
+    }
+  },
+  "derived_keys_hex": {
+    "p1_aes": "cb5ee5e85a4d3199d2b0666afa543d0c34427378eabd00e9d34c45a6c6c62c55",
+    "p1_chacha": "08404a1bc58b73a7eca67820d7757f15251d7658d02bec534776be6df834f509",
+    "p1_camellia": "bacd805ed9286c3ff1e24edf7ffd458c1726bb78790744b922d620735c3fa17c",
+    "p1_hmac": "1d79072afc3b12d22cf2ddab2c987da82f21499eb56d48a597d174d2238cd2ba",
+    "p2_aes": "e27982be6c0ecb6edded1ea8e7878c5ee02e68abb8b6af2a7870fb4ec97c5317",
+    "p2_chacha": "57c6012c914d816487d18d09b5464db4825ff67c130636dfed61ca1e30b4f0aa",
+    "p2_camellia": "1e5cd9b19f41bf44fe9658634f9812842113c8fa9754bb2fef2f97f170d3c72c",
+    "p2_hmac": "2b3e0533d81ea5d303077b516e25f792e2073fbe19edee8022144e7e9a1b49bf",
+    "header_auth": "906a1a28fea6aec563a8f964ba3e75eb5cc0d34065597ba85dacf4c454863052",
+    "footer_auth": "601411012e2a4d6323b32e3975fa9c1543d6583b4545cd0dac5a4d411ff2cffa",
+    "padding": "386363d6d0391ebe7b7cc00d48b84db469fdb4479e0f8483f84b93135687607a"
+  },
+  "key_commitment_hex": "3b0e10ef89423b386c9c3a9ebbfcf5c6630cb1974bef5d7ca839fa2eac3da1dd1f6f56301cd2dfa9cc085637bd5e8d0a3f25f58fb8d184dfcb12a361109b1dbe",
+  "chunk_nonces": {
+    "chunk0_pass1": {
+      "aes": "9fa8f0ca2cefb5d9d7a09007",
+      "chacha": "aad3a40560d87b9b415b3c9c",
+      "camellia_iv": "05ef6aff94edf06d3e240beb6c381c3b"
+    },
+    "chunk1_pass2": {
+      "aes": "c4888bc76806f49d92f64266",
+      "chacha": "4d501e0955fa518b578da5b7",
+      "camellia_iv": "4634b75137387429c41c6467dca53343"
+    }
+  },
+  "padding_lengths": {
+    "0": 765,
+    "1": 2695,
+    "2": 2349,
+    "3": 3307,
+    "4": 1782
+  },
+  "trap_hash_examples": {
+    "salt_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "index0_alpha": "4fe9b50ff879bb91ad887262522ef133dce7b7f08be010dd6aa89a871ac16421",
+    "index1_alpha": "0b3d89d2fedd25a5340c74cf4b7354a103d1096f94e468e4b6ed5f9eb89f655d"
+  }
+}

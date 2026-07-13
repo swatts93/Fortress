@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="140" viewBox="0 0 120 140">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="100%" stop-color="#0066a0"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(60, 68)">
+    <path d="M0 -56 L48 -36 L48 8 C48 36 26 52 0 62 C-26 52 -48 36 -48 8 L-48 -36 Z"
+          fill="none" stroke="url(#g1)" stroke-width="3" stroke-linejoin="round"/>
+    <line x1="-32" y1="-28" x2="32" y2="-28" stroke="#00d4ff" stroke-width="1.5" opacity="0.2"/>
+    <line x1="-36" y1="-16" x2="36" y2="-16" stroke="#00d4ff" stroke-width="1.5" opacity="0.35"/>
+    <line x1="-38" y1="-4" x2="38" y2="-4" stroke="#00d4ff" stroke-width="2" opacity="0.5"/>
+    <line x1="-38" y1="8" x2="38" y2="8" stroke="#00d4ff" stroke-width="2" opacity="0.65"/>
+    <line x1="-34" y1="20" x2="34" y2="20" stroke="#00d4ff" stroke-width="1.5" opacity="0.45"/>
+    <line x1="-26" y1="32" x2="26" y2="32" stroke="#00d4ff" stroke-width="1.5" opacity="0.3"/>
+    <circle cx="0" cy="-2" r="7" fill="#00d4ff" opacity="0.9"/>
+    <rect x="-2.5" y="4" width="5" height="12" rx="2" fill="#00d4ff" opacity="0.9"/>
+  </g>
+</svg>

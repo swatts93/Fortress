@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oxanium:wght@300;400;500;600;700&family=Saira:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg-deep: #0a0c10;
+    --bg-card: #12151c;
+    --bg-card-hover: #181c25;
+    --border: #1e2330;
+    --text-primary: #e8eaf0;
+    --text-secondary: #6b7280;
+    --accent-cyan: #00d4ff;
+    --accent-amber: #f59e0b;
+    --accent-red: #ef4444;
+    --accent-emerald: #10b981;
+    --fortress-primary: #00d4ff;
+    --fortress-secondary: #0a3d5c;
+    --fortress-dark: #061926;
+    --grid-line: rgba(0, 212, 255, 0.04);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Saira', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-glow {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 32px;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+
+  .page-header h1 {
+    font-family: 'Oxanium', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+    margin-bottom: 12px;
+  }
+
+  .page-header p {
+    font-family: 'Saira', sans-serif;
+    font-weight: 300;
+    font-size: 13px;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+  }
+
+  .logo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+
+  .logo-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .logo-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,212,255,0.3), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .logo-card:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(0,212,255,0.15);
+    transform: translateY(-2px);
+  }
+
+  .logo-card:hover::before { opacity: 1; }
+
+  .logo-card.full-width {
+    grid-column: 1 / -1;
+    min-height: 220px;
+  }
+
+  .logo-card.light-bg {
+    background: #f0f2f5;
+    border-color: #d1d5db;
+  }
+  .logo-card.light-bg:hover {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+  }
+
+  .card-label {
+    position: absolute;
+    top: 16px;
+    left: 20px;
+    font-family: 'Oxanium', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  .logo-card.light-bg .card-label {
+    color: #6b7280;
+  }
+
+  .card-use {
+    position: absolute;
+    bottom: 16px;
+    right: 20px;
+    font-family: 'Saira', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+  }
+
+  .logo-card.light-bg .card-use {
+    color: #9ca3af;
+  }
+
+  .section-divider {
+    text-align: center;
+    margin: 48px 0 32px;
+    font-family: 'Oxanium', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .section-divider::before,
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+  }
+
+  .color-strip {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 48px;
+  }
+
+  .color-swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .swatch-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+  }
+
+  .swatch-label {
+    font-family: 'Oxanium', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+  }
+
+  .swatch-hex {
+    font-family: 'Oxanium', sans-serif;
+    font-size: 11px;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+  }
+
+  .font-info {
+    text-align: center;
+    margin-top: 32px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-card);
+  }
+
+  .font-info span {
+    font-family: 'Oxanium', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 700px) {
+    .logo-grid { grid-template-columns: 1fr; }
+    .container { padding: 32px 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Fortress Crypt</h1>
+    <p>Brand identity suite — 6-layer cascade encryption system</p>
+  </div>
+
+  <!-- PRIMARY LOCKUP -->
+  <div class="section-divider">Primary mark</div>
+  <div class="logo-grid">
+    <div class="logo-card full-width">
+      <span class="card-label">Primary lockup — dark</span>
+      <svg width="420" height="72" viewBox="0 0 420 72">
+        <!-- Shield icon with 6 layers -->
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#00d4ff"/>
+            <stop offset="100%" stop-color="#0077a8"/>
+          </linearGradient>
+        </defs>
+        <g transform="translate(0, 4)">
+          <!-- Outer shield -->
+          <path d="M32 2 L58 14 L58 38 C58 52 46 60 32 66 C18 60 6 52 6 38 L6 14 Z" 
+                fill="none" stroke="url(#g1)" stroke-width="2.5" stroke-linejoin="round"/>
+          <!-- Layer lines inside shield -->
+          <line x1="16" y1="22" x2="48" y2="22" stroke="#00d4ff" stroke-width="1.2" opacity="0.3"/>
+          <line x1="14" y1="29" x2="50" y2="29" stroke="#00d4ff" stroke-width="1.2" opacity="0.45"/>
+          <line x1="12" y1="36" x2="52" y2="36" stroke="#00d4ff" stroke-width="1.5" opacity="0.6"/>
+          <line x1="14" y1="43" x2="50" y2="43" stroke="#00d4ff" stroke-width="1.2" opacity="0.45"/>
+          <line x1="18" y1="50" x2="46" y2="50" stroke="#00d4ff" stroke-width="1.2" opacity="0.3"/>
+          <!-- Center keyhole -->
+          <circle cx="32" cy="33" r="4" fill="#00d4ff" opacity="0.9"/>
+          <rect x="30.5" y="36" width="3" height="8" rx="1" fill="#00d4ff" opacity="0.9"/>
+        </g>
+        <!-- Wordmark -->
+        <text x="78" y="44" font-family="Oxanium, sans-serif" font-weight="700" font-size="36" fill="#e8eaf0" letter-spacing="4">FORTRESS</text>
+        <!-- Submark -->
+        <text x="80" y="60" font-family="Saira, sans-serif" font-weight="300" font-size="12" fill="#6b7280" letter-spacing="6">CRYPT</text>
+      </svg>
+      <span class="card-use">Primary use · documentation · headers</span>
+    </div>
+
+    <div class="logo-card full-width light-bg">
+      <span class="card-label">Primary lockup — light</span>
+      <svg width="420" height="72" viewBox="0 0 420 72">
+        <defs>
+          <linearGradient id="g1b" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0077a8"/>
+            <stop offset="100%" stop-color="#004d6e"/>
+          </linearGradient>
+        </defs>
+        <g transform="translate(0, 4)">
+          <path d="M32 2 L58 14 L58 38 C58 52 46 60 32 66 C18 60 6 52 6 38 L6 14 Z" 
+                fill="none" stroke="url(#g1b)" stroke-width="2.5" stroke-linejoin="round"/>
+          <line x1="16" y1="22" x2="48" y2="22" stroke="#0077a8" stroke-width="1.2" opacity="0.25"/>
+          <line x1="14" y1="29" x2="50" y2="29" stroke="#0077a8" stroke-width="1.2" opacity="0.4"/>
+          <line x1="12" y1="36" x2="52" y2="36" stroke="#0077a8" stroke-width="1.5" opacity="0.55"/>
+          <line x1="14" y1="43" x2="50" y2="43" stroke="#0077a8" stroke-width="1.2" opacity="0.4"/>
+          <line x1="18" y1="50" x2="46" y2="50" stroke="#0077a8" stroke-width="1.2" opacity="0.25"/>
+          <circle cx="32" cy="33" r="4" fill="#0077a8" opacity="0.85"/>
+          <rect x="30.5" y="36" width="3" height="8" rx="1" fill="#0077a8" opacity="0.85"/>
+        </g>
+        <text x="78" y="44" font-family="Oxanium, sans-serif" font-weight="700" font-size="36" fill="#0f172a" letter-spacing="4">FORTRESS</text>
+        <text x="80" y="60" font-family="Saira, sans-serif" font-weight="300" font-size="12" fill="#64748b" letter-spacing="6">CRYPT</text>
+      </svg>
+      <span class="card-use">Print · light backgrounds</span>
+    </div>
+  </div>
+
+  <!-- ICON MARKS -->
+  <div class="section-divider">Icon marks</div>
+  <div class="logo-grid">
+    <!-- Layered Shield Icon -->
+    <div class="logo-card">
+      <span class="card-label">Shield icon</span>
+      <svg width="120" height="140" viewBox="0 0 120 140">
+        <defs>
+          <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#00d4ff"/>
+            <stop offset="100%" stop-color="#0066a0"/>
+          </linearGradient>
+        </defs>
+        <g transform="translate(60, 68)">
+          <!-- Outer shield -->
+          <path d="M0 -56 L48 -36 L48 8 C48 36 26 52 0 62 C-26 52 -48 36 -48 8 L-48 -36 Z"
+                fill="none" stroke="url(#g2)" stroke-width="3" stroke-linejoin="round"/>
+          <!-- 6 horizontal layer lines -->
+          <line x1="-32" y1="-28" x2="32" y2="-28" stroke="#00d4ff" stroke-width="1.5" opacity="0.2"/>
+          <line x1="-36" y1="-16" x2="36" y2="-16" stroke="#00d4ff" stroke-width="1.5" opacity="0.35"/>
+          <line x1="-38" y1="-4" x2="38" y2="-4" stroke="#00d4ff" stroke-width="2" opacity="0.5"/>
+          <line x1="-38" y1="8" x2="38" y2="8" stroke="#00d4ff" stroke-width="2" opacity="0.65"/>
+          <line x1="-34" y1="20" x2="34" y2="20" stroke="#00d4ff" stroke-width="1.5" opacity="0.45"/>
+          <line x1="-26" y1="32" x2="26" y2="32" stroke="#00d4ff" stroke-width="1.5" opacity="0.3"/>
+          <!-- Center lock -->
+          <circle cx="0" cy="-2" r="7" fill="#00d4ff" opacity="0.9"/>
+          <rect x="-2.5" y="4" width="5" height="12" rx="2" fill="#00d4ff" opacity="0.9"/>
+        </g>
+      </svg>
+      <span class="card-use">App icon · favicon</span>
+    </div>
+
+    <!-- Geometric Tower Icon -->
+    <div class="logo-card">
+      <span class="card-label">Tower icon</span>
+      <svg width="120" height="140" viewBox="0 0 120 140">
+        <defs>
+          <linearGradient id="g3" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#00d4ff"/>
+            <stop offset="100%" stop-color="#005f8a"/>
+          </linearGradient>
+        </defs>
+        <g transform="translate(60, 10)">
+          <!-- Tower body — 6 stacked blocks with increasing width -->
+          <rect x="-12" y="0" width="24" height="14" rx="2" fill="#00d4ff" opacity="0.3" stroke="#00d4ff" stroke-width="0.5"/>
+          <rect x="-16" y="18" width="32" height="14" rx="2" fill="#00d4ff" opacity="0.4" stroke="#00d4ff" stroke-width="0.5"/>
+          <rect x="-20" y="36" width="40" height="14" rx="2" fill="#00d4ff" opacity="0.5" stroke="#00d4ff" stroke-width="0.5"/>
+          <rect x="-24" y="54" width="48" height="14" rx="2" fill="#00d4ff" opacity="0.6" stroke="#00d4ff" stroke-width="0.5"/>
+          <rect x="-28" y="72" width="56" height="14" rx="2" fill="#00d4ff" opacity="0.75" stroke="#00d4ff" stroke-width="0.5"/>
+          <rect x="-32" y="90" width="64" height="14" rx="2" fill="#00d4ff" opacity="0.9" stroke="#00d4ff" stroke-width="0.5"/>
+          <!-- Battlements on top -->
+          <rect x="-14" y="-8" width="6" height="10" rx="1" fill="#00d4ff" opacity="0.25"/>
+          <rect x="-3" y="-12" width="6" height="14" rx="1" fill="#00d4ff" opacity="0.25"/>
+          <rect x="8" y="-8" width="6" height="10" rx="1" fill="#00d4ff" opacity="0.25"/>
+          <!-- Keyhole in center block -->
+          <circle cx="0" cy="61" r="3.5" fill="#0a0c10"/>
+          <rect x="-1.5" y="64" width="3" height="6" rx="1" fill="#0a0c10"/>
+        </g>
+      </svg>
+      <span class="card-use">Alternative icon · badges</span>
+    </div>
+
+    <!-- Monogram F -->
+    <div class="logo-card">
+      <span class="card-label">Monogram</span>
+      <svg width="120" height="130" viewBox="0 0 120 130">
+        <defs>
+          <linearGradient id="g4" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#00d4ff"/>
+            <stop offset="100%" stop-color="#0066a0"/>
+          </linearGradient>
+        </defs>
+        <g transform="translate(60, 65)">
+          <!-- Hexagonal container -->
+          <polygon points="0,-48 42,-24 42,24 0,48 -42,24 -42,-24" 
+                   fill="none" stroke="url(#g4)" stroke-width="2.5"/>
+          <!-- Stylized F with layers -->
+          <path d="M-16 -28 L18 -28 L18 -20 L-8 -20 L-8 -6 L14 -6 L14 2 L-8 2 L-8 28 L-16 28 Z" 
+                fill="#00d4ff" opacity="0.9"/>
+          <!-- Layer accents -->
+          <line x1="-22" y1="-14" x2="-18" y2="-14" stroke="#00d4ff" stroke-width="2" opacity="0.4"/>
+          <line x1="-22" y1="-4" x2="-18" y2="-4" stroke="#00d4ff" stroke-width="2" opacity="0.5"/>
+          <line x1="-22" y1="6" x2="-18" y2="6" stroke="#00d4ff" stroke-width="2" opacity="0.6"/>
+          <line x1="-22" y1="16" x2="-18" y2="16" stroke="#00d4ff" stroke-width="2" opacity="0.5"/>
+        </g>
+      </svg>
+      <span class="card-use">Social media · watermark</span>
+    </div>
+
+    <!-- Minimal Lock+Layers -->
+    <div class="logo-card">
+      <span class="card-label">Minimal mark</span>
+      <svg width="120" height="130" viewBox="0 0 120 130">
+        <g transform="translate(60, 62)">
+          <!-- Lock shackle -->
+          <path d="M-14 -8 L-14 -24 C-14 -40 14 -40 14 -24 L14 -8" 
+                fill="none" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+          <!-- Lock body — 6 stacked thin rects -->
+          <rect x="-22" y="-10" width="44" height="6" rx="1" fill="#00d4ff" opacity="0.3"/>
+          <rect x="-22" y="-2" width="44" height="6" rx="1" fill="#00d4ff" opacity="0.4"/>
+          <rect x="-22" y="6" width="44" height="6" rx="1" fill="#00d4ff" opacity="0.55"/>
+          <rect x="-22" y="14" width="44" height="6" rx="1" fill="#00d4ff" opacity="0.7"/>
+          <rect x="-22" y="22" width="44" height="6" rx="1" fill="#00d4ff" opacity="0.85"/>
+          <rect x="-22" y="30" width="44" height="6" rx="1" fill="#00d4ff" opacity="1.0"/>
+          <!-- Keyhole -->
+          <circle cx="0" cy="14" r="4" fill="#0a0c10"/>
+          <rect x="-1.5" y="17" width="3" height="7" rx="1" fill="#0a0c10"/>
+        </g>
+      </svg>
+      <span class="card-use">CLI branding · compact spaces</span>
+    </div>
+  </div>
+
+  <!-- MONOCHROME -->
+  <div class="section-divider">Monochrome variants</div>
+  <div class="logo-grid">
+    <div class="logo-card" style="background:#000">
+      <span class="card-label" style="color:#444">White on black</span>
+      <svg width="280" height="56" viewBox="0 0 280 56">
+        <g transform="translate(0, 2)">
+          <path d="M24 2 L44 11 L44 28 C44 38 35 44 24 48 C13 44 4 38 4 28 L4 11 Z" 
+                fill="none" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+          <line x1="12" y1="16" x2="36" y2="16" stroke="#fff" stroke-width="1" opacity="0.25"/>
+          <line x1="10" y1="22" x2="38" y2="22" stroke="#fff" stroke-width="1" opacity="0.4"/>
+          <line x1="9" y1="28" x2="39" y2="28" stroke="#fff" stroke-width="1.2" opacity="0.55"/>
+          <line x1="11" y1="34" x2="37" y2="34" stroke="#fff" stroke-width="1" opacity="0.35"/>
+          <circle cx="24" cy="25" r="3" fill="#fff" opacity="0.8"/>
+          <rect x="23" y="27.5" width="2" height="6" rx="0.8" fill="#fff" opacity="0.8"/>
+        </g>
+        <text x="58" y="33" font-family="Oxanium, sans-serif" font-weight="700" font-size="28" fill="#ffffff" letter-spacing="3">FORTRESS</text>
+        <text x="59.5" y="47" font-family="Saira, sans-serif" font-weight="300" font-size="10" fill="#888" letter-spacing="5">CRYPT</text>
+      </svg>
+      <span class="card-use" style="color:#444">Embossing · stamping</span>
+    </div>
+
+    <div class="logo-card light-bg">
+      <span class="card-label">Black on white</span>
+      <svg width="280" height="56" viewBox="0 0 280 56">
+        <g transform="translate(0, 2)">
+          <path d="M24 2 L44 11 L44 28 C44 38 35 44 24 48 C13 44 4 38 4 28 L4 11 Z" 
+                fill="none" stroke="#0f172a" stroke-width="2" stroke-linejoin="round"/>
+          <line x1="12" y1="16" x2="36" y2="16" stroke="#0f172a" stroke-width="1" opacity="0.2"/>
+          <line x1="10" y1="22" x2="38" y2="22" stroke="#0f172a" stroke-width="1" opacity="0.35"/>
+          <line x1="9" y1="28" x2="39" y2="28" stroke="#0f172a" stroke-width="1.2" opacity="0.5"/>
+          <line x1="11" y1="34" x2="37" y2="34" stroke="#0f172a" stroke-width="1" opacity="0.3"/>
+          <circle cx="24" cy="25" r="3" fill="#0f172a" opacity="0.8"/>
+          <rect x="23" y="27.5" width="2" height="6" rx="0.8" fill="#0f172a" opacity="0.8"/>
+        </g>
+        <text x="58" y="33" font-family="Oxanium, sans-serif" font-weight="700" font-size="28" fill="#0f172a" letter-spacing="3">FORTRESS</text>
+        <text x="59.5" y="47" font-family="Saira, sans-serif" font-weight="300" font-size="10" fill="#64748b" letter-spacing="5">CRYPT</text>
+      </svg>
+      <span class="card-use">Documents · formal print</span>
+    </div>
+  </div>
+
+  <!-- BRAND COLORS -->
+  <div class="section-divider">Brand palette</div>
+  <div class="color-strip">
+    <div class="color-swatch">
+      <div class="swatch-circle" style="background:#00d4ff; border-color:#00d4ff"></div>
+      <span class="swatch-label">Primary</span>
+      <span class="swatch-hex">#00D4FF</span>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-circle" style="background:#0077a8; border-color:#0077a8"></div>
+      <span class="swatch-label">Deep</span>
+      <span class="swatch-hex">#0077A8</span>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-circle" style="background:#061926; border-color:#1e2330"></div>
+      <span class="swatch-label">Dark</span>
+      <span class="swatch-hex">#061926</span>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-circle" style="background:#0a0c10; border-color:#1e2330"></div>
+      <span class="swatch-label">Black</span>
+      <span class="swatch-hex">#0A0C10</span>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-circle" style="background:#e8eaf0; border-color:#e8eaf0"></div>
+      <span class="swatch-label">Light</span>
+      <span class="swatch-hex">#E8EAF0</span>
+    </div>
+    <div class="color-swatch">
+      <div class="swatch-circle" style="background:#ef4444; border-color:#ef4444"></div>
+      <span class="swatch-label">Alert</span>
+      <span class="swatch-hex">#EF4444</span>
+    </div>
+  </div>
+
+  <div class="font-info">
+    <span>Wordmark: Oxanium 700 &nbsp;·&nbsp; Subtext: Saira 300 &nbsp;·&nbsp; Body: Saira 400</span>
+  </div>
+</div>
+
+</body>
+</html>
