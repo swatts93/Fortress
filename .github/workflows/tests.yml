@@ -1,0 +1,47 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  audit-suite:
+    name: audit-package tests (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install audit-fork package + test deps
+        working-directory: audit-package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e core-python-audit
+          pip install pytest
+
+      - name: Run test suite (audit fork)
+        working-directory: audit-package
+        run: pytest tests/ -q
+
+      - name: Reinstall shipping build
+        working-directory: audit-package
+        run: |
+          pip uninstall -y fortress-crypt-audit
+          pip install -e core-python
+
+      - name: Run test suite (shipping build)
+        working-directory: audit-package
+        run: pytest tests/ -q
