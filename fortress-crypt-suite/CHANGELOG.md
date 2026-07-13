@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.0.2] — Duress Timing Side-Channel Fix
+
+### Security
+
+- **Duress-mode timing oracle (Python reference, all platforms share the same
+  control flow).** `decrypt_file` derived the duress keyset only after the real
+  password's key commitment failed to match, so entering the real password cost
+  one Argon2id/scrypt pass while entering the duress password or any wrong
+  password cost two. Measured on a `standard`-level file, this was a ~2x wall-clock
+  difference (~1.4s vs ~2.8s) — enough for a coercion adversary (THREAT_MODEL.md
+  A5) to confirm from response latency alone that a handed-over password was the
+  genuine one, before ever inspecting the decrypted output. This undermined the
+  duress deniability goal (G6). Fixed by always deriving both keysets when duress
+  is enabled, regardless of which one (if any) matches, so response time no longer
+  depends on which password was supplied. Added a regression test
+  (`test_duress_enabled_always_derives_both_keysets`) that asserts both KDF calls
+  always occur. No file-format or on-disk byte change; existing `.fortress` files
+  are unaffected.
+
+### Correctness
+
+- **CLI crashed on non-UTF-8 Windows consoles.** The banner, progress bar, and
+  status lines use box-drawing and emoji characters (`╔`, `█`, `⛫`, `⚠`, `☠`).
+  On a default Windows console (`cp1252`), writing them raised
+  `UnicodeEncodeError` and killed the process before any command — including
+  `--help` — could run. `fortress/cli.py`'s `main()` now reconfigures
+  `stdout`/`stderr` to UTF-8 with `errors="replace"` on entry, so output
+  degrades gracefully instead of crashing.
+
 ## [2.0.1] — Code Audit Fixes
 
 This release addresses issues found in a code review pass across all three

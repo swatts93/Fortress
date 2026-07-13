@@ -293,6 +293,17 @@ def info(input_file):
 
 
 def main():
+    # The banner and progress output use box-drawing/emoji characters. On a
+    # default Windows console (cp1252, not UTF-8), writing them raises
+    # UnicodeEncodeError and crashes the CLI before any command runs.
+    # Reconfigure to UTF-8 with a replace fallback so output degrades
+    # gracefully instead of aborting the whole process.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
     cli()
 
 if __name__ == "__main__":

@@ -356,13 +356,17 @@ def decrypt_file(
         scrypt_p=raw_header.scrypt_p, kem_shared_secret=kem_ss,
     )
 
-    is_duress = False
     is_real = hmac_mod.compare_digest(real_keys.commitment, raw_header.key_commitment)
 
-    if not is_real and raw_header.duress_enabled:
-        # Try as duress password
-        real_keys.wipe()
-
+    # Always derive the duress keys too when duress is configured, even if the
+    # real password already matched. Deriving them only on a real-password
+    # mismatch makes the real password ~2x faster to verify than any other
+    # guess (one KDF pass vs. two), letting a coercion adversary confirm a
+    # handed-over password is the genuine one from wall-clock timing alone —
+    # defeating the duress deniability goal (G6, THREAT_MODEL.md §5).
+    duress_keys = None
+    duress_match = False
+    if raw_header.duress_enabled:
         if progress:
             progress(0, 0, "Verifying credentials...")
 
@@ -374,14 +378,15 @@ def decrypt_file(
             scrypt_n=raw_header.scrypt_n, scrypt_r=raw_header.scrypt_r,
             scrypt_p=raw_header.scrypt_p, kem_shared_secret=kem_ss,
         )
+        duress_match = hmac_mod.compare_digest(
+            duress_keys.commitment, raw_header.duress_key_commitment)
 
-        if hmac_mod.compare_digest(duress_keys.commitment, raw_header.duress_key_commitment):
-            is_duress = True
-        else:
-            duress_keys.wipe()
-            raise ValueError("KEY COMMITMENT MISMATCH — wrong password")
-    elif not is_real:
+    is_duress = (not is_real) and duress_match
+
+    if not is_real and not is_duress:
         real_keys.wipe()
+        if duress_keys:
+            duress_keys.wipe()
         raise ValueError("KEY COMMITMENT MISMATCH — wrong password")
 
     # ── Step 4: Decrypt appropriate section ──
@@ -395,10 +400,9 @@ def decrypt_file(
                 input_path, output_path, raw_header, real_keys, progress,
             )
     finally:
-        if is_duress:
+        real_keys.wipe()
+        if duress_keys:
             duress_keys.wipe()
-        else:
-            real_keys.wipe()
 
 
 def _decrypt_real(filepath, output_path, header, keys, progress):

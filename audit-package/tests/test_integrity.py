@@ -157,3 +157,45 @@ def test_header_params_survive_roundtrip(make_file):
     assert h.argon2_memory == 131072
     assert h.scrypt_n == 2**17
     assert h.version == 2
+
+
+# ── Duress timing side-channel ─────────────────────────────────────
+
+def test_duress_enabled_always_derives_both_keysets(make_file, monkeypatch):
+    """
+    Regression test: decrypt_file must derive the duress keyset every time
+    duress is enabled, regardless of whether the real password matches
+    first. Deriving it only on a real-password mismatch means the real
+    password is verified with one KDF pass while every other guess costs
+    two, creating a timing side channel that reveals whether a handed-over
+    password is the genuine one purely from response latency — undermining
+    the duress deniability goal (THREAT_MODEL.md G6/A5).
+    """
+    import fortress.api as api_module
+
+    _, e, o, _ = make_file("timing", duress_password="fakepw", duress_data=b"decoy")
+
+    real_derive = api_module.derive_keys
+    calls = []
+
+    def counting_derive(*args, **kwargs):
+        calls.append(kwargs.get("salt"))
+        return real_derive(*args, **kwargs)
+
+    monkeypatch.setattr(api_module, "derive_keys", counting_derive)
+
+    calls.clear()
+    decrypt_file(e, o, password="pw")  # real password — must still cost 2 KDFs
+    assert len(calls) == 2, (
+        "real-password decrypt only ran the real KDF, skipping the duress "
+        "derivation — reintroduces the timing oracle"
+    )
+
+    calls.clear()
+    decrypt_file(e, o + "2", password="fakepw")  # duress password
+    assert len(calls) == 2
+
+    calls.clear()
+    with pytest.raises(ValueError):
+        decrypt_file(e, o + "3", password="neither")
+    assert len(calls) == 2
