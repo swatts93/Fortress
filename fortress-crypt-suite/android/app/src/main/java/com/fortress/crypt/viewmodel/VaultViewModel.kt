@@ -209,7 +209,7 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
                 }
             } catch (e: FortressException.TrapTriggered) {
                 withContext(Dispatchers.Main) {
-                    _operationState.value = OperationState.Complete(false, "☠ ${e.message}")
+                    _operationState.value = OperationState.Complete(false, "TRAP TRIGGERED: ${e.message}")
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {

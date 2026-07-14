@@ -34,7 +34,7 @@ def _progress(done, total, status):
         return
     pct = int(100 * done / total)
     filled = int(30 * done / total)
-    bar = "█" * filled + "░" * (30 - filled)
+    bar = "#" * filled + "-" * (30 - filled)
     click.echo(f"\r  [{bar}] {pct:3d}% ({done}/{total}) {status}", nl=False)
     if done >= total:
         click.echo()
@@ -71,10 +71,10 @@ def _fmt(n):
 @click.version_option(version="2.0.0", prog_name="Fortress")
 def cli():
     """
-    ╔═══════════════════════════════════════════════════════════╗
-    ║  FORTRESS v2 — 6-Layer Cascade Encryption                ║
-    ║  Post-Quantum · Triple-KDF · Traps · Duress Mode         ║
-    ╚═══════════════════════════════════════════════════════════╝
+    ===============================================================
+      FORTRESS v2 -- 6-Layer Cascade Encryption
+      Post-Quantum / Triple-KDF / Traps / Duress Mode
+    ===============================================================
     """
     pass
 
@@ -94,11 +94,11 @@ def encrypt(input_file, output_file, level, pq_key, traps, duress, duress_file, 
     if output_file is None:
         output_file = input_file + ".fortress"
 
-    click.echo(f"\n  ⛫ FORTRESS ENCRYPT")
+    click.echo(f"\n  FORTRESS ENCRYPT")
     click.echo(f"  Input:    {input_file} ({_fmt(os.path.getsize(input_file))})")
     click.echo(f"  Output:   {output_file}")
     click.echo(f"  Security: {level.upper()}")
-    click.echo(f"  Layers:   6 (AES-256-GCM × 2, ChaCha20 × 2, Camellia-256 × 2)")
+    click.echo(f"  Layers:   6 (AES-256-GCM x2, ChaCha20 x2, Camellia-256 x2)")
 
     pk = pq.load_public_key(pq_key) if pq_key else None
     if pk: click.echo(f"  PQ Mode:  ML-KEM-1024 (hybrid)")
@@ -120,7 +120,7 @@ def encrypt(input_file, output_file, level, pq_key, traps, duress, duress_file, 
             if not code:
                 click.echo("  Error: empty code.", err=True); sys.exit(1)
             trap_codes.append(code)
-        click.echo(f"  ✓ {traps} trap codes set")
+        click.echo(f"  [OK] {traps} trap codes set")
 
     # Duress mode
     duress_password = None
@@ -179,7 +179,7 @@ def decrypt(input_file, output_file, pq_key):
     if output_file is None:
         output_file = input_file[:-9] if input_file.endswith(".fortress") else input_file + ".dec"
 
-    click.echo(f"\n  ⛫ FORTRESS DECRYPT")
+    click.echo(f"\n  FORTRESS DECRYPT")
     click.echo(f"  Input:  {input_file}")
     click.echo(f"  Output: {output_file}")
 
@@ -196,7 +196,7 @@ def decrypt(input_file, output_file, pq_key):
     # Trap codes first
     trap_codes = None
     if header.trap_count > 0:
-        click.echo(f"\n  ⚠ This file has {header.trap_count} trap code(s).")
+        click.echo(f"\n  WARNING: This file has {header.trap_count} trap code(s).")
         click.echo(f"  WARNING: Wrong code = FILE PERMANENTLY DESTROYED")
         click.echo()
         trap_codes = _get_trap_codes(header.trap_count)
@@ -211,7 +211,7 @@ def decrypt(input_file, output_file, pq_key):
             pq_secret_key=sk, progress=_progress, trap_codes=trap_codes,
         )
     except TrapTriggered as e:
-        click.echo(f"\n\n  ☠ TRAP TRIGGERED: {e}", err=True)
+        click.echo(f"\n\n  TRAP TRIGGERED: {e}", err=True)
         sys.exit(2)
     except ValueError as e:
         click.echo(f"\n  FAILED: {e}", err=True); sys.exit(1)
@@ -288,7 +288,7 @@ def info(input_file):
     except Exception as e:
         click.echo(f"Error: {e}", err=True); sys.exit(1)
     modes = {0: "Password", 1: "PQ-Only", 2: "Hybrid PQ"}
-    click.echo(f"\n  ⛫ FORTRESS FILE INFO")
+    click.echo(f"\n  FORTRESS FILE INFO")
     click.echo(f"  Version:     {h.version}")
     click.echo(f"  Mode:        {modes.get(h.mode, '?')}")
     click.echo(f"  Orig size:   {_fmt(h.original_size)}")
