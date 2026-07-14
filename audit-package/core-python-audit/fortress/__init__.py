@@ -43,6 +43,7 @@ from .api import (
     encrypt_file, decrypt_file,
     encrypt_message, decrypt_message,
     verify_trap_sequence, TrapTriggered, TrapVerificationError,
+    destroy_real_data_after_duress,
 )
 from .pq import generate_keypair, save_keypair, load_public_key, load_secret_key
 
@@ -50,5 +51,6 @@ __all__ = [
     "encrypt_file", "decrypt_file",
     "encrypt_message", "decrypt_message",
     "verify_trap_sequence", "TrapTriggered", "TrapVerificationError",
+    "destroy_real_data_after_duress",
     "generate_keypair", "save_keypair", "load_public_key", "load_secret_key",
 ]

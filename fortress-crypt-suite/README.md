@@ -44,8 +44,8 @@ Two independent memory-hard functions (Argon2id and scrypt) are XOR-combined, so
 | Key commitment (SHA3-512) | Prevents key-switching attacks |
 | Dual hash families | SHA-2 (header) + SHA-3 (footer) authentication |
 | Anti-forensic padding | Random padding per chunk hides content patterns |
-| Trap sequence | Ordered codes; a wrong entry destroys the file header |
-| Duress mode | A secondary password decrypts decoy data and wipes the real data |
+| Trap sequence | Ordered codes; a wrong entry destroys the file header (only ever enforced once the real password has authenticated the header — see CHANGELOG 2.0.4 FC-01) |
+| Duress mode | A secondary password decrypts decoy data. At `paranoid`/`fortress` levels this also wipes the real data automatically; at `standard`/`high` it does not by default (call `destroy_real_data_after_duress()` explicitly) — see CHANGELOG 2.0.4 FC-02 |
 | Constant-time comparison | All authentication checks resist timing side-channels |
 
 ### Security levels

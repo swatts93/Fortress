@@ -25,7 +25,12 @@ FORTRESS v2 — 6-Layer Double-Cascade Encryption with Traps & Duress
   PQ:      ML-KEM-1024 (NIST FIPS 203)
   Auth:    HMAC-SHA512 + Poly1305 + GHASH + SHA3-256
   Traps:   Sequential codes — wrong order destroys file
-  Duress:  Dead man's switch — fake password decrypts dummy data, wipes real
+  Duress:  Dead man's switch — fake password decrypts dummy data. At
+           paranoid/fortress security levels this also automatically wipes
+           the real data; at standard/high it does not (that automatic wipe
+           can never be cryptographically tied to the real password, so it's
+           opt-in there — call destroy_real_data_after_duress() explicitly).
+           See AUDIT_FINDINGS.md FC-02.
 """
 
 __version__ = "2.0.0"
@@ -34,6 +39,7 @@ from .api import (
     encrypt_file, decrypt_file,
     encrypt_message, decrypt_message,
     verify_trap_sequence, TrapTriggered,
+    destroy_real_data_after_duress,
 )
 from .pq import generate_keypair, save_keypair, load_public_key, load_secret_key
 
@@ -41,5 +47,6 @@ __all__ = [
     "encrypt_file", "decrypt_file",
     "encrypt_message", "decrypt_message",
     "verify_trap_sequence", "TrapTriggered",
+    "destroy_real_data_after_duress",
     "generate_keypair", "save_keypair", "load_public_key", "load_secret_key",
 ]

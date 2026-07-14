@@ -308,14 +308,40 @@ def decrypt_file(
     pq_secret_key: Optional[bytes] = None,
     progress: ProgressCallback = None,
     trap_codes: Optional[List[str]] = None,
+    destroy_real_on_duress: Optional[bool] = None,
 ) -> dict:
     """
     Decrypt a .fortress file.
 
-    Trap codes (if set) are verified FIRST. Wrong code = file destroyed.
-    Then password is checked against both real and duress commitments:
-      - Real password → decrypts real data normally
-      - Duress password → decrypts dummy data, DESTROYS real data
+    Real vs. duress password is determined by (constant-time) key commitment
+    comparison. Trap codes are enforced only after the header has been
+    cryptographically authenticated with the *real* password's
+    header_auth_key — which can only succeed when the real password was
+    supplied. See AUDIT_FINDINGS.md FC-01: trap_count/trap_salt/trap_hashes
+    used to be trusted straight off the unauthenticated header, so anyone
+    with write access to the ciphertext (no password knowledge needed) could
+    inject a forged trap section that destroyed the file on the owner's next
+    ordinary decrypt attempt. Enforcing traps only post-authentication closes
+    that hole; it also means trap codes now apply specifically to "you have
+    the real password but not the trap sequence" (their actual purpose),
+    not to duress/wrong-password attempts, which could never have their trap
+    fields trusted anyway.
+
+    Duress activation's "destroy the real data" step has the mirror problem
+    (AUDIT_FINDINGS.md FC-02) — it can never be authenticated this way, because
+    the header HMAC needs the real password, which a duress-password holder by
+    design never has. There is no cryptographic fix that preserves duress-
+    password-only unlock; see `_decrypt_duress()` for how this is handled.
+
+    Args:
+        destroy_real_on_duress: explicit override for whether a duress match
+            destroys real data. `None` (default) uses the security-level
+            default — automatic for paranoid/fortress, disabled for
+            standard/high (see `_security_level_from_params`). Pass `True` or
+            `False` to force one behavior regardless of level: e.g. a caller
+            can opt a `standard`-level file into the automatic wipe, or opt a
+            `paranoid`-level file out of it. Ignored when the entered
+            password isn't a duress match.
     """
     if not password:
         raise ValueError("Password required")
@@ -323,23 +349,14 @@ def decrypt_file(
     with open(input_path, "rb") as f:
         raw_header = read_header_raw(f)
 
-    # ── Step 1: Verify trap sequence (destructive on failure) ──
-    if raw_header.trap_count > 0:
-        if trap_codes is None:
-            raise ValueError(
-                f"This file requires {raw_header.trap_count} trap code(s). "
-                "Provide them via trap_codes parameter."
-            )
-        verify_trap_sequence(input_path, raw_header, trap_codes)
-
-    # ── Step 2: PQ decapsulation ──
+    # ── PQ decapsulation ──
     kem_ss = None
     if raw_header.mode == MODE_HYBRID:
         if pq_secret_key is None:
             raise ValueError("Hybrid PQ mode — secret key required")
         kem_ss = pq.decapsulate(pq_secret_key, raw_header.kem_ciphertext)
 
-    # ── Step 3: Derive keys and check which password was used ──
+    # ── Derive keys and check which password was used ──
     if progress:
         progress(0, 0, "Deriving keys (Argon2id -> scrypt -> HKDF)...")
 
@@ -385,11 +402,52 @@ def decrypt_file(
             duress_keys.wipe()
         raise ValueError("KEY COMMITMENT MISMATCH — wrong password")
 
-    # ── Step 4: Decrypt appropriate section ──
+    # ── Trap sequence: only ever trusted/enforced once the header has been
+    # authenticated with the real password (FC-01). Not reachable for
+    # duress/wrong-password attempts — their trap fields could never have
+    # been verified anyway, so nothing is lost by not enforcing them there.
+    if is_real:
+        try:
+            with open(input_path, "rb") as f:
+                verify_header(f, real_keys.header_auth_key)
+        except ValueError as e:
+            real_keys.wipe()
+            if duress_keys:
+                duress_keys.wipe()
+            raise ValueError(f"HEADER AUTHENTICATION FAILED — file tampered: {e}")
+
+        if raw_header.trap_count > 0:
+            if trap_codes is None:
+                real_keys.wipe()
+                if duress_keys:
+                    duress_keys.wipe()
+                raise ValueError(
+                    f"This file requires {raw_header.trap_count} trap code(s). "
+                    "Provide them via trap_codes parameter."
+                )
+            try:
+                verify_trap_sequence(input_path, raw_header, trap_codes)
+            except Exception:
+                real_keys.wipe()
+                if duress_keys:
+                    duress_keys.wipe()
+                raise
+
+    # ── Decrypt appropriate section ──
     try:
         if is_duress:
+            # See _decrypt_duress(): the automatic real-data wipe can never be
+            # authenticated (FC-02), so its default depends on security level
+            # (automatic for paranoid/fortress, disabled for standard/high) —
+            # unless the caller passes an explicit override.
+            if destroy_real_on_duress is not None:
+                destroy_real = destroy_real_on_duress
+            else:
+                level = _security_level_from_params(raw_header)
+                destroy_real = level in ("paranoid", "fortress")
             return _decrypt_duress(
                 input_path, output_path, raw_header, duress_keys, progress,
+                destroy_real,
             )
         else:
             return _decrypt_real(
@@ -401,43 +459,96 @@ def decrypt_file(
             duress_keys.wipe()
 
 
+def _security_level_from_params(header: FortressHeader) -> Optional[str]:
+    """
+    Reverse-map a header's stored KDF cost parameters back to the named
+    security level used at encrypt time. Reliable because encrypt_file()
+    only ever accepts one of the four named presets — raw/custom KDF
+    parameters are never exposed to callers, so every legitimately-encrypted
+    file's params exactly match one preset. Returns None on no exact match
+    (e.g. a hand-edited header), which callers should treat conservatively.
+    """
+    for level, a in ARGON2_PRESETS.items():
+        s = SCRYPT_PRESETS[level]
+        if (header.argon2_time == a["time_cost"] and
+                header.argon2_memory == a["memory_cost"] and
+                header.argon2_parallelism == a["parallelism"] and
+                header.scrypt_n == s["n"] and header.scrypt_r == s["r"] and
+                header.scrypt_p == s["p"]):
+            return level
+    return None
+
+
+def destroy_real_data_after_duress(filepath: str, header: Optional[FortressHeader] = None) -> None:
+    """
+    Explicit, opt-in dead-man's-switch trigger for standard/high security
+    level files, where decrypt_file() no longer destroys real data
+    automatically on a duress match (AUDIT_FINDINGS.md FC-02). Call this only
+    when the caller has independently decided the destructive wipe should
+    happen: it is exactly as forgeable as the automatic path it replaces (the
+    duress commitment match it relies on can never be tied to the real
+    password — see decrypt_file()'s docstring), so calling it does not add
+    security, it only opts back into the pre-existing risk deliberately
+    instead of automatically.
+    """
+    if header is None:
+        with open(filepath, "rb") as f:
+            header = read_header_raw(f)
+    scramble_real_data_section(filepath, header)
+
+
 def _decrypt_real(filepath, output_path, header, keys, progress):
-    """Normal decryption of real data."""
-    with open(filepath, "rb") as f:
-        f.seek(0)
-        verified = verify_header(f, keys.header_auth_key)
+    """
+    Normal decryption of real data.
 
-        # Skip duress section if present
-        if header.duress_enabled:
-            for _ in range(header.duress_chunk_count):
-                ct = read_chunk(f)
-            f.read(32)  # duress footer
+    Decrypts to a temp file and only renames it into place after the footer
+    chain has verified (AUDIT_FINDINGS.md FC-03: plaintext used to be written
+    directly to output_path chunk-by-chunk, before the footer was checked, so
+    a truncated/tampered file that failed decryption could still leave
+    correctly-decrypted plaintext sitting on disk — with no cleanup at all on
+    the "missing footer" / "unexpected EOF" failure paths specifically).
+    """
+    tmp_output = output_path + ".fortress-tmp"
+    try:
+        with open(filepath, "rb") as f:
+            f.seek(0)
+            verify_header(f, keys.header_auth_key)
 
-        # Decrypt real chunks
-        total = header.total_chunks
-        chunk_cts = []
-        bytes_written = 0
+            # Skip duress section if present
+            if header.duress_enabled:
+                for _ in range(header.duress_chunk_count):
+                    ct = read_chunk(f)
+                f.read(32)  # duress footer
 
-        with open(output_path, "wb") as out_f:
-            for i in range(total):
-                if progress:
-                    progress(i, total, "Decrypting...")
-                ct = read_chunk(f)
-                if ct is None:
-                    raise ValueError(f"Unexpected EOF at chunk {i}")
-                chunk_cts.append(ct)
-                pt = decrypt_chunk(ct, keys, i)
-                remaining = header.original_size - bytes_written
-                out_f.write(pt[:remaining])
-                bytes_written += min(len(pt), remaining)
+            # Decrypt real chunks
+            total = header.total_chunks
+            chunk_cts = []
+            bytes_written = 0
 
-        # Verify footer
-        stored = read_footer(f)
-        expected = _footer_hmac(keys.footer_auth_key, *chunk_cts)
-        if not hmac_mod.compare_digest(stored, expected):
-            try: os.unlink(output_path)
-            except OSError: pass
-            raise ValueError("FOOTER AUTH FAILED — file tampered")
+            with open(tmp_output, "wb") as out_f:
+                for i in range(total):
+                    if progress:
+                        progress(i, total, "Decrypting...")
+                    ct = read_chunk(f)
+                    if ct is None:
+                        raise ValueError(f"Unexpected EOF at chunk {i}")
+                    chunk_cts.append(ct)
+                    pt = decrypt_chunk(ct, keys, i)
+                    remaining = header.original_size - bytes_written
+                    out_f.write(pt[:remaining])
+                    bytes_written += min(len(pt), remaining)
+
+            # Verify footer
+            stored = read_footer(f)
+            expected = _footer_hmac(keys.footer_auth_key, *chunk_cts)
+            if not hmac_mod.compare_digest(stored, expected):
+                raise ValueError("FOOTER AUTH FAILED — file tampered")
+
+        os.replace(tmp_output, output_path)
+    except BaseException:
+        try: os.unlink(tmp_output)
+        except OSError: pass
+        raise
 
     if progress:
         progress(total, total, "Done")
@@ -448,50 +559,68 @@ def _decrypt_real(filepath, output_path, header, keys, progress):
     }
 
 
-def _decrypt_duress(filepath, output_path, header, duress_keys, progress):
+def _decrypt_duress(filepath, output_path, header, duress_keys, progress, destroy_real):
     """
-    Duress decryption: output dummy data, then DESTROY real data.
+    Duress decryption: output dummy data.
 
-    The caller sees normal decryption output. The real data is silently
-    and permanently wiped from the file afterward.
+    Decrypts to a temp file and only renames it into place after the duress
+    footer chain has verified (AUDIT_FINDINGS.md FC-03 — same fix as
+    _decrypt_real()).
+
+    If destroy_real is True, the real data section is silently and
+    permanently wiped after the decoy has been fully verified and written.
+    This step can never be cryptographically tied to the real password (the
+    header HMAC needs it, and a duress-password holder by design never has
+    it — AUDIT_FINDINGS.md FC-02), so it is only requested by decrypt_file()
+    for paranoid/fortress security levels. For standard/high, real data is
+    left intact; call destroy_real_data_after_duress() explicitly if the
+    caller wants the wipe anyway.
     """
-    with open(filepath, "rb") as f:
-        f.seek(0)
-        # We can't verify the main header HMAC with duress keys (it was
-        # signed with real keys), so we skip header auth for duress mode.
-        # The duress key commitment match already proves the password is valid.
-        _parse_past_header(f, header)
+    tmp_output = output_path + ".fortress-tmp"
+    try:
+        with open(filepath, "rb") as f:
+            f.seek(0)
+            # We can't verify the main header HMAC with duress keys (it was
+            # signed with real keys), so we skip header auth for duress mode.
+            # The duress key commitment match already proves the password is valid.
+            _parse_past_header(f, header)
 
-        # Decrypt duress chunks
-        duress_cts = []
-        bytes_written = 0
+            # Decrypt duress chunks
+            duress_cts = []
+            bytes_written = 0
 
-        with open(output_path, "wb") as out_f:
-            for i in range(header.duress_chunk_count):
-                if progress:
-                    progress(i, header.duress_chunk_count, "Decrypting...")
-                ct = read_chunk(f)
-                if ct is None:
-                    raise ValueError(f"Unexpected EOF at duress chunk {i}")
-                duress_cts.append(ct)
-                pt = decrypt_chunk(ct, duress_keys, i)
-                remaining = header.duress_data_size - bytes_written
-                out_f.write(pt[:remaining])
-                bytes_written += min(len(pt), remaining)
+            with open(tmp_output, "wb") as out_f:
+                for i in range(header.duress_chunk_count):
+                    if progress:
+                        progress(i, header.duress_chunk_count, "Decrypting...")
+                    ct = read_chunk(f)
+                    if ct is None:
+                        raise ValueError(f"Unexpected EOF at duress chunk {i}")
+                    duress_cts.append(ct)
+                    pt = decrypt_chunk(ct, duress_keys, i)
+                    remaining = header.duress_data_size - bytes_written
+                    out_f.write(pt[:remaining])
+                    bytes_written += min(len(pt), remaining)
 
-        # Verify duress footer
-        stored = read_footer(f)
-        expected = _footer_hmac(duress_keys.footer_auth_key, *duress_cts)
-        if not hmac_mod.compare_digest(stored, expected):
-            try: os.unlink(output_path)
-            except OSError: pass
-            raise ValueError("DURESS FOOTER AUTH FAILED")
+            # Verify duress footer
+            stored = read_footer(f)
+            expected = _footer_hmac(duress_keys.footer_auth_key, *duress_cts)
+            if not hmac_mod.compare_digest(stored, expected):
+                raise ValueError("DURESS FOOTER AUTH FAILED")
 
-    # ══ SILENTLY DESTROY REAL DATA ══
-    if progress:
-        progress(0, 0, "Finalizing...")
+        os.replace(tmp_output, output_path)
+    except BaseException:
+        try: os.unlink(tmp_output)
+        except OSError: pass
+        raise
 
-    scramble_real_data_section(filepath, header)
+    real_data_destroyed = False
+    if destroy_real:
+        # ══ SILENTLY DESTROY REAL DATA ══
+        if progress:
+            progress(0, 0, "Finalizing...")
+        scramble_real_data_section(filepath, header)
+        real_data_destroyed = True
 
     if progress:
         progress(header.duress_chunk_count, header.duress_chunk_count, "Done")
@@ -499,7 +628,7 @@ def _decrypt_duress(filepath, output_path, header, duress_keys, progress):
     return {
         "original_size": header.duress_data_size, "bytes_written": bytes_written,
         "chunks": header.duress_chunk_count, "mode": "decrypted",
-        "verified": True, "duress": True,  # caller can check but doesn't have to
+        "verified": True, "duress": True, "real_data_destroyed": real_data_destroyed,
     }
 
 

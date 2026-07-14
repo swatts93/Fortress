@@ -19,7 +19,7 @@
 
 """Fortress Post-Quantum — ML-KEM-1024 (NIST FIPS 203, Level 5)"""
 
-import os, json, base64
+import os, sys, json, base64, subprocess
 from pathlib import Path
 from typing import Tuple
 
@@ -49,6 +49,31 @@ def decapsulate(secret_key: bytes, ciphertext: bytes) -> bytes:
     if not PQ_AVAILABLE: raise RuntimeError("pqcrypto not installed")
     return _decaps(secret_key, ciphertext)
 
+def _restrict_to_current_user(path) -> None:
+    """
+    Best-effort: restrict a secret-key file to the current user only.
+
+    os.chmod(0o600) is a silent no-op on Windows — POSIX mode bits don't map
+    onto NTFS ACLs, so the file stays exactly as readable as its parent
+    directory's inherited permissions (AUDIT_FINDINGS.md FC-06). On Windows,
+    use icacls to strip inherited ACEs and grant only the current user.
+    """
+    if sys.platform == "win32":
+        try:
+            username = os.environ.get("USERNAME") or os.getlogin()
+            subprocess.run(
+                ["icacls", str(path), "/inheritance:r", "/grant:r", f"{username}:F"],
+                check=True, capture_output=True,
+            )
+        except Exception:
+            pass
+    else:
+        try:
+            os.chmod(path, 0o600)
+        except OSError:
+            pass
+
+
 def save_keypair(pk, sk, directory, name="fortress"):
     d = Path(directory); d.mkdir(parents=True, exist_ok=True)
     pub_path, sec_path = d / f"{name}.pub.json", d / f"{name}.sec.json"
@@ -59,8 +84,7 @@ def save_keypair(pk, sk, directory, name="fortress"):
         json.dump({"algorithm": KEM_ALGORITHM, "type": "secret",
                     "key": base64.b64encode(sk).decode(), "size": len(sk),
                     "warning": "KEEP SECRET."}, f, indent=2)
-    try: os.chmod(sec_path, 0o600)
-    except OSError: pass
+    _restrict_to_current_user(sec_path)
     return str(pub_path), str(sec_path)
 
 def load_public_key(path):

@@ -174,7 +174,11 @@ def encrypt(input_file, output_file, level, pq_key, traps, duress, duress_file, 
 @click.argument("input_file", type=click.Path(exists=True))
 @click.argument("output_file", type=click.Path(), required=False)
 @click.option("--pq-key", type=click.Path(exists=True), help="ML-KEM-1024 secret key")
-def decrypt(input_file, output_file, pq_key):
+@click.option("--destroy-real-on-duress/--no-destroy-real-on-duress", default=None,
+              help="Override the security-level default for whether a duress "
+                   "match wipes real data (default: automatic for paranoid/"
+                   "fortress, disabled for standard/high — see CHANGELOG FC-02)")
+def decrypt(input_file, output_file, pq_key, destroy_real_on_duress):
     """Decrypt a .fortress file. Wrong trap codes = FILE DESTROYED."""
     if output_file is None:
         output_file = input_file[:-9] if input_file.endswith(".fortress") else input_file + ".dec"
@@ -209,6 +213,7 @@ def decrypt(input_file, output_file, pq_key):
         result = decrypt_file(
             input_file, output_file, password,
             pq_secret_key=sk, progress=_progress, trap_codes=trap_codes,
+            destroy_real_on_duress=destroy_real_on_duress,
         )
     except TrapTriggered as e:
         click.echo(f"\n\n  TRAP TRIGGERED: {e}", err=True)

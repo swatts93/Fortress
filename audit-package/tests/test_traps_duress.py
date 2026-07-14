@@ -28,7 +28,7 @@ tests the non-destructive variant.
 import os
 import pytest
 
-from fortress import encrypt_file, decrypt_file, TrapTriggered
+from fortress import encrypt_file, decrypt_file, TrapTriggered, destroy_real_data_after_duress
 
 
 def _is_audit_fork():
@@ -124,7 +124,14 @@ def test_duress_real_password_gets_real(paths):
         assert f.read() == real
 
 
-def test_duress_fake_password_gets_dummy_and_wipes_real(paths):
+def test_duress_standard_level_does_not_auto_wipe_real(paths):
+    """
+    AUDIT_FINDINGS.md FC-02: the automatic real-data wipe on duress match can
+    never be cryptographically tied to the real password (a duress-password
+    holder never has the header_auth_key needed to authenticate the header),
+    so for standard/high levels it's no longer automatic — real data must
+    survive a duress decrypt unless the caller explicitly opts in.
+    """
     i, e, o = paths("d_fake")
     real = os.urandom(40000)
     dummy = b"nothing to see here"
@@ -134,11 +141,83 @@ def test_duress_fake_password_gets_dummy_and_wipes_real(paths):
                  duress_password="fakepw", duress_data=dummy)
     res = decrypt_file(e, o, password="fakepw")
     assert res["duress"] is True
+    assert res["real_data_destroyed"] is False
+    with open(o, "rb") as f:
+        assert f.read() == dummy
+    # Real data must still be recoverable — no automatic wipe at this level
+    res2 = decrypt_file(e, o + "2", password="realpw")
+    assert res2["duress"] is False
+    with open(o + "2", "rb") as f:
+        assert f.read() == real
+
+
+def test_duress_paranoid_level_auto_wipes_real(paths):
+    """paranoid/fortress levels keep the original automatic, silent wipe."""
+    i, e, o = paths("d_paranoid")
+    real = os.urandom(40000)
+    dummy = b"nothing to see here"
+    with open(i, "wb") as f:
+        f.write(real)
+    encrypt_file(i, e, password="realpw", security_level="paranoid",
+                 duress_password="fakepw", duress_data=dummy)
+    res = decrypt_file(e, o, password="fakepw")
+    assert res["duress"] is True
+    assert res["real_data_destroyed"] is True
     with open(o, "rb") as f:
         assert f.read() == dummy
     # Real data must now be destroyed
     with pytest.raises(ValueError):
         decrypt_file(e, o + "2", password="realpw")
+
+
+def test_destroy_real_data_after_duress_explicit_opt_in(paths):
+    """standard/high callers can still get the wipe by asking for it explicitly."""
+    i, e, o = paths("d_optin")
+    real = os.urandom(40000)
+    dummy = b"nothing to see here"
+    with open(i, "wb") as f:
+        f.write(real)
+    encrypt_file(i, e, password="realpw", security_level="standard",
+                 duress_password="fakepw", duress_data=dummy)
+    res = decrypt_file(e, o, password="fakepw")
+    assert res["real_data_destroyed"] is False
+
+    destroy_real_data_after_duress(e)
+
+    with pytest.raises(ValueError):
+        decrypt_file(e, o + "2", password="realpw")
+
+
+def test_destroy_real_on_duress_override_forces_wipe_at_standard_level(paths):
+    """destroy_real_on_duress=True forces the wipe even at standard/high."""
+    i, e, o = paths("d_force_on")
+    real = os.urandom(40000)
+    dummy = b"nothing to see here"
+    with open(i, "wb") as f:
+        f.write(real)
+    encrypt_file(i, e, password="realpw", security_level="standard",
+                 duress_password="fakepw", duress_data=dummy)
+    res = decrypt_file(e, o, password="fakepw", destroy_real_on_duress=True)
+    assert res["real_data_destroyed"] is True
+    with pytest.raises(ValueError):
+        decrypt_file(e, o + "2", password="realpw")
+
+
+def test_destroy_real_on_duress_override_prevents_wipe_at_paranoid_level(paths):
+    """destroy_real_on_duress=False suppresses the wipe even at paranoid/fortress."""
+    i, e, o = paths("d_force_off")
+    real = os.urandom(40000)
+    dummy = b"nothing to see here"
+    with open(i, "wb") as f:
+        f.write(real)
+    encrypt_file(i, e, password="realpw", security_level="paranoid",
+                 duress_password="fakepw", duress_data=dummy)
+    res = decrypt_file(e, o, password="fakepw", destroy_real_on_duress=False)
+    assert res["real_data_destroyed"] is False
+    res2 = decrypt_file(e, o + "2", password="realpw")
+    assert res2["duress"] is False
+    with open(o + "2", "rb") as f:
+        assert f.read() == real
 
 
 def test_duress_multichunk_dummy(paths):

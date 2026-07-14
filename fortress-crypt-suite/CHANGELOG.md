@@ -1,5 +1,88 @@
 # Changelog
 
+## [2.0.4] — Independent Audit: Header-Forgery and Plaintext-Leak Fixes
+
+An independent audit pass (see `AUDIT_FINDINGS.md`, FC-01 through FC-06) found
+and this release fixes six issues in the Python reference core. All fixes
+verified with the audit's own regression tests (`test_header_forgery.py`)
+plus the full existing suite (69 passed against the shipping build, 59
+against the audit fork).
+
+### Security
+
+- **FC-01 (CRITICAL) — forged trap section could destroy any file with zero
+  password knowledge.** `decrypt_file()` used to read `trap_count` /
+  `trap_salt` / `trap_hashes` off the *unauthenticated* header and act on
+  them (including the destructive scramble on mismatch) before ever checking
+  the header HMAC. An attacker with one moment of write access to the
+  ciphertext could inject a fake trap requirement into a file that never had
+  one; the owner's very next ordinary decrypt attempt would demand codes they
+  never set, and any attempt to comply destroyed the file permanently — even
+  with the correct real password. Fixed: trap fields are now only trusted
+  once `verify_header()` has confirmed the header is authentic using the real
+  password's `header_auth_key`, which is only possible when the real
+  password was supplied. This also means trap enforcement now specifically
+  targets its actual purpose ("you have the real password but not the trap
+  sequence") rather than gating every decrypt attempt regardless of which
+  password will be used.
+
+- **FC-02 (CRITICAL) — forged duress section could destroy real data with
+  zero password knowledge.** `_decrypt_duress()` never authenticated the
+  header at all (it structurally can't — the header HMAC needs the real
+  password, which a duress-password holder never has by design). Because the
+  duress commitment check is entirely self-consistent (computed from inputs
+  the caller freely chooses), anyone could pick their own password and
+  duress salt/nonce, derive a matching commitment locally, splice it into any
+  file's header, and trigger the destructive real-data wipe using a password
+  only they knew. There is no cryptographic fix that preserves pure
+  duress-password-only unlock (verifying authenticity requires the real
+  password; anything checkable with just the duress password is equally
+  forgeable by an attacker with no relation to either password — this was
+  checked exhaustively, see the fix's docstring). Given that, the automatic
+  wipe is now level-gated: **standard/high** security levels no longer
+  destroy real data automatically on a duress match (call the new
+  `destroy_real_data_after_duress()` explicitly if you want it); **paranoid/
+  fortress** keep the original automatic, silent behavior. This is a
+  deliberate, documented tradeoff, not a complete fix — see AUDIT_FINDINGS.md
+  FC-02 and THREAT_MODEL.md for the residual risk at paranoid/fortress
+  levels. `decrypt_file()` also takes an explicit
+  `destroy_real_on_duress: Optional[bool]` override (and the CLI's `decrypt`
+  gets `--destroy-real-on-duress`/`--no-destroy-real-on-duress`) so a caller
+  can force either behavior regardless of the file's security level, rather
+  than being limited to the level-based default.
+
+- **FC-03 (HIGH) — unverified plaintext could survive a failed decrypt.**
+  `_decrypt_real()`/`_decrypt_duress()` wrote decrypted plaintext directly to
+  the output path chunk-by-chunk, before the footer chain was checked. A
+  truncated or tampered ciphertext (missing footer, missing trailing chunk)
+  raised an error but left correctly-decrypted plaintext sitting on disk with
+  no cleanup and no warning — a direct contradiction of SPECIFICATION.md's
+  own Security Claim #2 ("detected before plaintext is released"). Fixed:
+  both functions now decrypt to a temp file and only atomically rename it
+  into place (`os.replace`) after full footer verification succeeds; the
+  temp file is removed on every exception path.
+
+- **FC-04 (documentation) — `FortressKeys.wipe()` doesn't actually wipe
+  memory in CPython.** `bytes` is immutable, so reassigning fields drops
+  references without overwriting the original key buffers. Already out of
+  scope under the project's own threat model (endpoint compromise, A6), but
+  the name/usage pattern implied a guarantee it doesn't deliver. Fixed the
+  docstring to say so explicitly rather than changing the (out-of-scope)
+  behavior.
+
+- **FC-06 (LOW) — `chmod(0o600)` on the ML-KEM secret-key file is a silent
+  no-op on Windows.** POSIX mode bits don't map to NTFS ACLs. Added an
+  `icacls`-based restriction (strip inherited ACEs, grant only the current
+  user) on Windows; unchanged `chmod` elsewhere.
+
+### Packaging
+
+- **FC-05 (LOW) — license metadata contradicted the actual license.** All
+  three `pyproject.toml` files declared `license = {text = "MIT"}` while
+  every source header, the top-level `LICENSE`, and `licensing/` establish
+  AGPL-3.0-or-later with a commercial dual-licensing program. Corrected to
+  `license = {text = "AGPL-3.0-or-later"}`.
+
 ## [2.0.3] — Second-Pass Audit: iOS/Android Timing Fix + CLI Robustness
 
 ### Security

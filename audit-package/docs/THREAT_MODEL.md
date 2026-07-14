@@ -129,6 +129,16 @@ duress activation sees a file consistent with having held just the decoy.
 - It is **not** a hidden-volume scheme (à la VeraCrypt) where the very existence
   of a second volume is cryptographically deniable. Fortress's duress is a
   *destroy-on-decoy* mechanism, not a *coexist-and-deny* one.
+- The automatic wipe is **not** authenticatable: the header HMAC that would
+  prove a duress section is genuine requires the real password, which a
+  duress-password holder never has by design. An independent audit (see
+  AUDIT_FINDINGS.md FC-02) found this makes the automatic wipe forgeable by an
+  adversary with *no* password knowledge at all, against files at any security
+  level, as originally implemented. As of the FC-02 fix, the automatic wipe is
+  restricted to the `paranoid`/`fortress` presets — an adversary can still
+  forge a wipe trigger against a `paranoid`/`fortress` file this way; this is
+  an accepted, documented residual risk at those levels, not a claim that it's
+  resolved. `standard`/`high` no longer wipe automatically at all.
 
 An auditor evaluating G6 should evaluate it against exactly this claim, not the
 stronger hidden-volume claim.

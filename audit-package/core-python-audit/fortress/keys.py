@@ -74,6 +74,22 @@ class FortressKeys:
     commitment: bytes
 
     def wipe(self):
+        """
+        Best-effort only: drops this object's references to its key fields so
+        they become eligible for garbage collection. This does NOT overwrite
+        the underlying key material in memory — `bytes` is immutable in
+        CPython, so the original buffers returned by hash_secret_raw() /
+        HKDF.derive() / Scrypt.derive() are separate objects untouched by this
+        call, and may remain resident in memory (heap, swap, core dumps)
+        until the interpreter happens to reuse that region.
+
+        This is NOT a defense against memory-disclosure attacks — endpoint
+        compromise is explicitly out of scope (THREAT_MODEL.md §4, A6). A
+        real guarantee would require mutable buffers (bytearray) with
+        in-place overwrite plus OS-level protections (mlock, guarded heap)
+        outside what pure Python/CPython can offer, which is a larger change
+        than this method's name implies today (AUDIT_FINDINGS.md FC-04).
+        """
         for field_name in [
             'p1_aes_key', 'p1_chacha_key', 'p1_camellia_key', 'p1_hmac_key',
             'p2_aes_key', 'p2_chacha_key', 'p2_camellia_key', 'p2_hmac_key',
