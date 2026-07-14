@@ -50,6 +50,24 @@ def test_wrong_password(make_file):
         decrypt_file(e, o, password="wrongpassword")
 
 
+def test_zero_chunk_size_rejected(tmp_path):
+    i = str(tmp_path / "z.in")
+    e = str(tmp_path / "z.fortress")
+    with open(i, "wb") as f:
+        f.write(b"data")
+    with pytest.raises(ValueError):
+        encrypt_file(i, e, password="pw", security_level="standard", chunk_size=0)
+
+
+def test_negative_chunk_size_rejected(tmp_path):
+    i = str(tmp_path / "n.in")
+    e = str(tmp_path / "n.fortress")
+    with open(i, "wb") as f:
+        f.write(b"data")
+    with pytest.raises(ValueError):
+        encrypt_file(i, e, password="pw", security_level="standard", chunk_size=-1)
+
+
 def test_bitflip_in_chunk_body(make_file):
     _, e, o, _ = make_file("flip")
     with open(e, "r+b") as f:

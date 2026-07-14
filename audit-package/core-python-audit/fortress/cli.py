@@ -187,8 +187,11 @@ def decrypt(input_file, output_file, pq_key):
 
     # Read header to check for traps
     from .format import read_header_raw
-    with open(input_file, "rb") as f:
-        header = read_header_raw(f)
+    try:
+        with open(input_file, "rb") as f:
+            header = read_header_raw(f)
+    except Exception as e:
+        click.echo(f"\n  FAILED: {e}", err=True); sys.exit(1)
 
     # Trap codes first
     trap_codes = None
@@ -243,13 +246,16 @@ def msg_decrypt(token):
     """Decrypt a Fortress message token."""
     from .format import read_header_raw
     import base64, io
-    raw = base64.urlsafe_b64decode(token[9:]) if token.startswith("FORTRESS:") else b""
-    if raw:
-        buf = io.BytesIO(raw)
-        h = read_header_raw(buf)
-        trap_codes = _get_trap_codes(h.trap_count) if h.trap_count > 0 else None
-    else:
-        trap_codes = None
+    try:
+        raw = base64.urlsafe_b64decode(token[9:]) if token.startswith("FORTRESS:") else b""
+        if raw:
+            buf = io.BytesIO(raw)
+            h = read_header_raw(buf)
+            trap_codes = _get_trap_codes(h.trap_count) if h.trap_count > 0 else None
+        else:
+            trap_codes = None
+    except Exception as e:
+        click.echo(f"FAILED: {e}", err=True); sys.exit(1)
     password = _get_password()
     try:
         click.echo(f"\n{decrypt_message(token, password, trap_codes=trap_codes)}\n")
@@ -276,8 +282,11 @@ def keygen(output_dir, name):
 def info(input_file):
     """Show .fortress file metadata."""
     from .format import read_header_raw
-    with open(input_file, "rb") as f:
-        h = read_header_raw(f)
+    try:
+        with open(input_file, "rb") as f:
+            h = read_header_raw(f)
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True); sys.exit(1)
     modes = {0: "Password", 1: "PQ-Only", 2: "Hybrid PQ"}
     click.echo(f"\n  ⛫ FORTRESS FILE INFO")
     click.echo(f"  Version:     {h.version}")

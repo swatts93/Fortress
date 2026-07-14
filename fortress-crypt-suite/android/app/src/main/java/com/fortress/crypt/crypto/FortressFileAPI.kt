@@ -246,19 +246,31 @@ object FortressAPI {
 
         val isReal = FortressKeyDerivation.constantTimeEquals(realKeys.commitment, header.keyCommitment)
 
-        if (!isReal && header.duressEnabled) {
-            realKeys.wipe()
-            val dKeys = FortressKeyDerivation.deriveKeys(password, header.duressSalt,
+        // Always derive the duress keyset when duress is enabled, even if the
+        // real password already matched. Deriving it only on a real-password
+        // mismatch makes the real password ~2x faster to verify than any other
+        // guess (one KDF pass vs. two), letting a coercion adversary confirm a
+        // handed-over password is the genuine one from wall-clock timing alone —
+        // defeating the duress deniability goal.
+        var dKeys: FortressKeys? = null
+        var duressMatch = false
+        if (header.duressEnabled) {
+            dKeys = FortressKeyDerivation.deriveKeys(password, header.duressSalt,
                 header.duressNonceSeed, SecurityLevel.STANDARD)
-            if (FortressKeyDerivation.constantTimeEquals(dKeys.commitment, header.duressKeyCommitment)) {
-                return decryptDuress(inputFile, outputFile, header, dKeys, progress).also { dKeys.wipe() }
-            }
-            dKeys.wipe()
-            throw FortressException.WrongPassword()
+            duressMatch = FortressKeyDerivation.constantTimeEquals(dKeys.commitment, header.duressKeyCommitment)
+        }
+
+        if (!isReal && duressMatch) {
+            realKeys.wipe()
+            val confirmedDuressKeys = dKeys!!
+            return decryptDuress(inputFile, outputFile, header, confirmedDuressKeys, progress)
+                .also { confirmedDuressKeys.wipe() }
         } else if (!isReal) {
             realKeys.wipe()
+            dKeys?.wipe()
             throw FortressException.WrongPassword()
         }
+        dKeys?.wipe()
 
         // Step 3: Decrypt real data
         try {

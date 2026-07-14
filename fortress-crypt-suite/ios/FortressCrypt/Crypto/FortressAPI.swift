@@ -223,24 +223,31 @@ enum FortressAPI {
 
         let isReal = FortressKeyDerivation.constantTimeEquals(realKeys.commitment, header.keyCommitment)
 
-        if !isReal && header.duressEnabled == 1 {
-            // Try as duress password
+        // Always derive the duress keyset when duress is enabled, even if the
+        // real password already matched. Deriving it only on a real-password
+        // mismatch makes the real password ~2x faster to verify than any other
+        // guess (one KDF pass vs. two), letting a coercion adversary confirm a
+        // handed-over password is the genuine one from wall-clock timing alone —
+        // defeating the duress deniability goal.
+        var duressKeys: FortressKeys? = nil
+        var duressMatch = false
+        if header.duressEnabled == 1 {
             progress?(0, "Verifying credentials...")
-            let duressKeys = try FortressKeyDerivation.deriveKeys(
+            let dKeys = try FortressKeyDerivation.deriveKeys(
                 password: password, salt: header.duressSalt,
                 nonceSeed: header.duressNonceSeed,
                 level: level, kemSharedSecret: kemSS
             )
+            duressKeys = dKeys
+            duressMatch = FortressKeyDerivation.constantTimeEquals(dKeys.commitment, header.duressKeyCommitment)
+        }
 
-            if FortressKeyDerivation.constantTimeEquals(duressKeys.commitment, header.duressKeyCommitment) {
-                // DURESS MODE — decrypt dummy, destroy real
-                return try decryptDuress(
-                    inputURL: inputURL, outputURL: outputURL,
-                    header: header, duressKeys: duressKeys, progress: progress
-                )
-            } else {
-                throw FortressError.decryptionFailed("KEY COMMITMENT MISMATCH — wrong password")
-            }
+        if !isReal && duressMatch {
+            // DURESS MODE — decrypt dummy, destroy real
+            return try decryptDuress(
+                inputURL: inputURL, outputURL: outputURL,
+                header: header, duressKeys: duressKeys!, progress: progress
+            )
         } else if !isReal {
             throw FortressError.decryptionFailed("KEY COMMITMENT MISMATCH — wrong password")
         }

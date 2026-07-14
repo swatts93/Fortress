@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.0.3] — Second-Pass Audit: iOS/Android Timing Fix + CLI Robustness
+
+### Security
+
+- **Duress timing oracle also present on iOS and Android.** The same
+  conditional-derivation pattern fixed in 2.0.2 for the Python reference existed
+  identically in `FortressAPI.swift` and `FortressFileAPI.kt` (both ports
+  intentionally mirror the reference's control flow). Applied the same fix:
+  both keysets are now always derived when duress is enabled, on all three
+  platforms. Not independently compiled/tested here (no Xcode/Android SDK in
+  this environment) — reviewed by hand for correctness; recommend running the
+  existing iOS/Android test targets before the next release.
+
+### Correctness
+
+- **Three CLI commands crashed with a raw Python traceback on bad input.**
+  `decrypt`, `info`, and `msg-dec` all read a file/token header before entering
+  their `try`/`except` blocks, so a corrupted, truncated, or non-Fortress input
+  raised an unhandled `ValueError` instead of the clean `FAILED:`/`Error:`
+  message the rest of the CLI uses. All three now wrap the header read and
+  report failures consistently.
+
+- **`chunk_size <= 0` raised a bare `ZeroDivisionError`/`struct.error`.**
+  `encrypt_file` now validates `chunk_size` is a positive integer up front and
+  raises a clear `ValueError`. (Investigated whether this could cause an
+  infinite loop/DoS — it can't: the division/struct-pack failures both occur
+  before any chunk-writing loop runs. It was a poor error message, not a hang.)
+  Added regression tests for both the zero and negative cases.
+
 ## [2.0.2] — Duress Timing Side-Channel Fix
 
 ### Security

@@ -155,6 +155,8 @@ def encrypt_file(
     """
     if not password:
         raise ValueError("Password required")
+    if chunk_size <= 0:
+        raise ValueError("chunk_size must be a positive integer")
 
     params = _get_kdf_params(security_level)
     file_size = os.path.getsize(input_path)
