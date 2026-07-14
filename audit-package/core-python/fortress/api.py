@@ -213,7 +213,7 @@ def encrypt_file(
 
     # Derive real keys
     if progress:
-        progress(0, 0, "Deriving real keys (Argon2id → scrypt → HKDF)...")
+        progress(0, 0, "Deriving real keys (Argon2id -> scrypt -> HKDF)...")
 
     keys = derive_keys(
         password=password, salt=salt, nonce_seed=nonce_seed,
@@ -341,7 +341,7 @@ def decrypt_file(
 
     # ── Step 3: Derive keys and check which password was used ──
     if progress:
-        progress(0, 0, "Deriving keys (Argon2id → scrypt → HKDF)...")
+        progress(0, 0, "Deriving keys (Argon2id -> scrypt -> HKDF)...")
 
     # Try as real password first
     real_keys = derive_keys(

@@ -155,7 +155,7 @@ object FortressAPI {
             dCommit = dKeys.commitment
         }
 
-        progress?.invoke(0.0, "Deriving real keys (Argon2id → scrypt → HKDF)...")
+        progress?.invoke(0.0, "Deriving real keys (Argon2id -> scrypt -> HKDF)...")
         val keys = FortressKeyDerivation.deriveKeys(password, salt, nonceSeed, level)
 
         try {

@@ -83,7 +83,7 @@ enum FortressAPI {
         }
 
         // Derive real keys
-        progress?(0, "Deriving keys (Argon2id → scrypt → HKDF)...")
+        progress?(0, "Deriving keys (Argon2id -> scrypt -> HKDF)...")
         let keys = try FortressKeyDerivation.deriveKeys(
             password: password, salt: salt, nonceSeed: nonceSeed,
             level: level, kemSharedSecret: kemSS

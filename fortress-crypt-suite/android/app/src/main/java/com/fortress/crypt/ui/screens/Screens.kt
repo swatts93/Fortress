@@ -396,7 +396,7 @@ fun SettingsScreen(viewModel: VaultViewModel) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     InfoRow("Version", "2.0.0")
                     InfoRow("Cipher Layers", "6 (double cascade)")
-                    InfoRow("KDF Chain", "Argon2id → scrypt → HKDF")
+                    InfoRow("KDF Chain", "Argon2id -> scrypt -> HKDF")
                     InfoRow("Post-Quantum", "ML-KEM-1024")
                 }
             }

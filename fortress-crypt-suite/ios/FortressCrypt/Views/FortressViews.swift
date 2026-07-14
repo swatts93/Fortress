@@ -490,7 +490,7 @@ struct SettingsView: View {
                 HStack {
                     Text("KDF Chain")
                     Spacer()
-                    Text("Argon2id → scrypt → HKDF").foregroundColor(.secondary)
+                    Text("Argon2id -> scrypt -> HKDF").foregroundColor(.secondary)
                 }
             }
 
