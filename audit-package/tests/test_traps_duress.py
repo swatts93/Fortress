@@ -124,8 +124,15 @@ def test_duress_real_password_gets_real(paths):
         assert f.read() == real
 
 
-def test_duress_fake_password_gets_dummy_and_wipes_real(paths):
-    i, e, o = paths("d_fake")
+def test_duress_password_alone_does_not_wipe_without_confirmation(paths):
+    """
+    See AUDIT_FINDINGS.md FC-02: duress_salt/duress_nonce_seed/
+    duress_key_commitment are not authenticated by anything the duress
+    branch can check on its own, so the destructive wipe now requires an
+    explicit confirm_duress_wipe=True rather than firing automatically the
+    instant a duress password is recognized.
+    """
+    i, e, o = paths("d_fake_noconfirm")
     real = os.urandom(40000)
     dummy = b"nothing to see here"
     with open(i, "wb") as f:
@@ -134,6 +141,27 @@ def test_duress_fake_password_gets_dummy_and_wipes_real(paths):
                  duress_password="fakepw", duress_data=dummy)
     res = decrypt_file(e, o, password="fakepw")
     assert res["duress"] is True
+    assert res["real_data_wiped"] is False
+    with open(o, "rb") as f:
+        assert f.read() == dummy
+    # Real data must still be recoverable -- no wipe without confirmation
+    res2 = decrypt_file(e, o + "2", password="realpw")
+    assert res2["duress"] is False
+    with open(o + "2", "rb") as f:
+        assert f.read() == real
+
+
+def test_duress_fake_password_gets_dummy_and_wipes_real(paths):
+    i, e, o = paths("d_fake")
+    real = os.urandom(40000)
+    dummy = b"nothing to see here"
+    with open(i, "wb") as f:
+        f.write(real)
+    encrypt_file(i, e, password="realpw", security_level="standard",
+                 duress_password="fakepw", duress_data=dummy)
+    res = decrypt_file(e, o, password="fakepw", confirm_duress_wipe=True)
+    assert res["duress"] is True
+    assert res["real_data_wiped"] is True
     with open(o, "rb") as f:
         assert f.read() == dummy
     # Real data must now be destroyed

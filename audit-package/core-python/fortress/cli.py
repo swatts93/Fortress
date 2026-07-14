@@ -174,7 +174,11 @@ def encrypt(input_file, output_file, level, pq_key, traps, duress, duress_file, 
 @click.argument("input_file", type=click.Path(exists=True))
 @click.argument("output_file", type=click.Path(), required=False)
 @click.option("--pq-key", type=click.Path(exists=True), help="ML-KEM-1024 secret key")
-def decrypt(input_file, output_file, pq_key):
+@click.option("--confirm-duress-wipe", is_flag=True,
+              help="If the duress password is entered, immediately wipe the "
+                   "real data section without an interactive confirmation "
+                   "prompt (for scripted use).")
+def decrypt(input_file, output_file, pq_key, confirm_duress_wipe):
     """Decrypt a .fortress file. Wrong trap codes = FILE DESTROYED."""
     if output_file is None:
         output_file = input_file[:-9] if input_file.endswith(".fortress") else input_file + ".dec"
@@ -209,12 +213,43 @@ def decrypt(input_file, output_file, pq_key):
         result = decrypt_file(
             input_file, output_file, password,
             pq_secret_key=sk, progress=_progress, trap_codes=trap_codes,
+            confirm_duress_wipe=confirm_duress_wipe,
         )
     except TrapTriggered as e:
         click.echo(f"\n\n  TRAP TRIGGERED: {e}", err=True)
         sys.exit(2)
     except ValueError as e:
+        # Defense in depth: the core is expected to clean up any partial
+        # output itself on failure (AUDIT_FINDINGS.md FC-03), but never
+        # leave a half-decrypted file behind at the CLI layer either.
+        if os.path.exists(output_file):
+            try: os.remove(output_file)
+            except OSError: pass
         click.echo(f"\n  FAILED: {e}", err=True); sys.exit(1)
+
+    # Duress password recognized but the real data wipe wasn't pre-confirmed
+    # via --confirm-duress-wipe: ask explicitly before doing anything
+    # irreversible (AUDIT_FINDINGS.md FC-02).
+    if result.get("duress") and not result.get("real_data_wiped", False):
+        click.echo()
+        if result.get("audit_fork_real_data_preserved"):
+            # Non-destructive audit fork: there is nothing to confirm, the
+            # real data is never wiped by this build. Don't ask a question
+            # whose "yes" answer would then falsely claim destruction.
+            click.echo("  NOTE: duress password recognized (audit fork -- "
+                       "real data is never wiped by this build).")
+        else:
+            click.echo("  NOTE: duress password recognized.")
+            click.echo("  NOTE: the real data section has NOT been wiped yet.")
+            if click.confirm("  Permanently destroy the real data section now?", default=False):
+                result = decrypt_file(
+                    input_file, output_file, password,
+                    pq_secret_key=sk, progress=_progress,
+                    confirm_duress_wipe=True,
+                )
+                click.echo("  Real data section destroyed.")
+            else:
+                click.echo("  Real data section left intact.")
 
     elapsed = time.time() - start
     click.echo(f"\n  Decrypted in {elapsed:.1f}s")

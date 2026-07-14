@@ -314,14 +314,26 @@ def decrypt_file(
     pq_secret_key: Optional[bytes] = None,
     progress: ProgressCallback = None,
     trap_codes: Optional[List[str]] = None,
+    confirm_duress_wipe: bool = False,
 ) -> dict:
     """
     Decrypt a .fortress file.
 
-    Trap codes (if set) are verified FIRST. Wrong code = file destroyed.
+    Trap codes (if set) are verified FIRST -- but only destructively (raising
+    TrapVerificationError from a real, header-authenticated trap section) once
+    the header has been proven authentic against the REAL password (see
+    AUDIT_FINDINGS.md FC-01). read_header_raw() performs no HMAC check, so
+    trap_count/trap_salt/trap_hashes must never be trusted for a destructive
+    decision before that proof exists.
+
     Then password is checked against both real and duress commitments:
-      - Real password → decrypts real data normally
-      - Duress password → decrypts dummy data, DESTROYS real data
+      - Real password -> decrypts real data normally
+      - Duress password -> decrypts dummy data. In this (non-destructive)
+        audit fork the real data is never wiped regardless of
+        confirm_duress_wipe; the parameter is accepted for API parity with
+        the shipping build. See AUDIT_FINDINGS.md FC-02 for why
+        duress_salt/duress_nonce_seed/duress_key_commitment can't be
+        authenticated on this branch even in the shipping build.
     """
     if not password:
         raise ValueError("Password required")
@@ -329,23 +341,14 @@ def decrypt_file(
     with open(input_path, "rb") as f:
         raw_header = read_header_raw(f)
 
-    # ── Step 1: Verify trap sequence (destructive on failure) ──
-    if raw_header.trap_count > 0:
-        if trap_codes is None:
-            raise ValueError(
-                f"This file requires {raw_header.trap_count} trap code(s). "
-                "Provide them via trap_codes parameter."
-            )
-        verify_trap_sequence(input_path, raw_header, trap_codes)
-
-    # ── Step 2: PQ decapsulation ──
+    # ── Step 1: PQ decapsulation ──
     kem_ss = None
     if raw_header.mode == MODE_HYBRID:
         if pq_secret_key is None:
             raise ValueError("Hybrid PQ mode — secret key required")
         kem_ss = pq.decapsulate(pq_secret_key, raw_header.kem_ciphertext)
 
-    # ── Step 3: Derive keys and check which password was used ──
+    # ── Step 2: Derive keys and check which password was used ──
     if progress:
         progress(0, 0, "Deriving keys (Argon2id -> scrypt -> HKDF)...")
 
@@ -359,6 +362,38 @@ def decrypt_file(
     )
 
     is_real = hmac_mod.compare_digest(real_keys.commitment, raw_header.key_commitment)
+
+    # See AUDIT_FINDINGS.md FC-01: the header is only signed with the REAL
+    # header_auth_key, so trap metadata can only be proven authentic when the
+    # entered password is genuinely the real one.
+    header_authentic = False
+    if is_real:
+        with open(input_path, "rb") as f:
+            try:
+                verify_header(f, real_keys.header_auth_key)
+                header_authentic = True
+            except ValueError:
+                header_authentic = False
+
+    # ── Step 3: Verify trap sequence (destructive only once the header has
+    #     been proven authentic) ──
+    if raw_header.trap_count > 0:
+        if trap_codes is None:
+            real_keys.wipe()
+            raise ValueError(
+                f"This file requires {raw_header.trap_count} trap code(s). "
+                "Provide them via trap_codes parameter."
+            )
+        if header_authentic:
+            verify_trap_sequence(input_path, raw_header, trap_codes)
+        elif is_real and not header_authentic:
+            real_keys.wipe()
+            raise ValueError(
+                "HEADER AUTHENTICATION FAILED. Wrong password, corrupted "
+                "file, or tampering detected."
+            )
+        # else: fall through -- entered password isn't real; can't prove
+        # trap metadata either way, so don't evaluate it destructively here.
 
     # Always derive the duress keys too when duress is configured, even if the
     # real password already matched. Deriving them only on a real-password
@@ -396,6 +431,7 @@ def decrypt_file(
         if is_duress:
             return _decrypt_duress(
                 input_path, output_path, raw_header, duress_keys, progress,
+                confirm_duress_wipe,
             )
         else:
             return _decrypt_real(
@@ -411,39 +447,43 @@ def _decrypt_real(filepath, output_path, header, keys, progress):
     """Normal decryption of real data."""
     with open(filepath, "rb") as f:
         f.seek(0)
-        verified = verify_header(f, keys.header_auth_key)
+        verify_header(f, keys.header_auth_key)
 
         # Skip duress section if present
         if header.duress_enabled:
             for _ in range(header.duress_chunk_count):
-                ct = read_chunk(f)
+                read_chunk(f)
             f.read(32)  # duress footer
 
-        # Decrypt real chunks
+        # Read every real chunk's CIPHERTEXT and verify the footer chain
+        # BEFORE decrypting or writing any plaintext (AUDIT_FINDINGS.md FC-03).
         total = header.total_chunks
         chunk_cts = []
-        bytes_written = 0
+        for i in range(total):
+            ct = read_chunk(f)
+            if ct is None:
+                raise ValueError(f"Unexpected EOF at chunk {i}")
+            chunk_cts.append(ct)
 
+        stored = read_footer(f)
+        expected = _footer_hmac(keys.footer_auth_key, *chunk_cts)
+        if not hmac_mod.compare_digest(stored, expected):
+            raise ValueError("FOOTER AUTH FAILED — file tampered")
+
+    bytes_written = 0
+    try:
         with open(output_path, "wb") as out_f:
-            for i in range(total):
+            for i, ct in enumerate(chunk_cts):
                 if progress:
                     progress(i, total, "Decrypting...")
-                ct = read_chunk(f)
-                if ct is None:
-                    raise ValueError(f"Unexpected EOF at chunk {i}")
-                chunk_cts.append(ct)
                 pt = decrypt_chunk(ct, keys, i)
                 remaining = header.original_size - bytes_written
                 out_f.write(pt[:remaining])
                 bytes_written += min(len(pt), remaining)
-
-        # Verify footer
-        stored = read_footer(f)
-        expected = _footer_hmac(keys.footer_auth_key, *chunk_cts)
-        if not hmac_mod.compare_digest(stored, expected):
-            try: os.unlink(output_path)
-            except OSError: pass
-            raise ValueError("FOOTER AUTH FAILED — file tampered")
+    except Exception:
+        try: os.unlink(output_path)
+        except OSError: pass
+        raise
 
     if progress:
         progress(total, total, "Done")
@@ -454,56 +494,66 @@ def _decrypt_real(filepath, output_path, header, keys, progress):
     }
 
 
-def _decrypt_duress(filepath, output_path, header, duress_keys, progress):
+def _decrypt_duress(filepath, output_path, header, duress_keys, progress,
+                     confirm_duress_wipe=False):
     """
-    Duress decryption: output dummy data, then DESTROY real data.
+    AUDIT FORK — NON-DESTRUCTIVE.
 
-    The caller sees normal decryption output. The real data is silently
-    and permanently wiped from the file afterward.
+    Duress decryption: output dummy data. The real data section is NEVER
+    destroyed in this fork, regardless of confirm_duress_wipe (accepted only
+    for API parity with the shipping build). See SPECIFICATION.md §10 and
+    AUDIT_FINDINGS.md FC-02.
     """
     with open(filepath, "rb") as f:
         f.seek(0)
         # We can't verify the main header HMAC with duress keys (it was
         # signed with real keys), so we skip header auth for duress mode.
-        # The duress key commitment match already proves the password is valid.
+        # The duress key commitment match already proves *a* password
+        # matching the on-disk (possibly forged) duress fields was entered —
+        # it does NOT by itself prove those fields are genuine.
         _parse_past_header(f, header)
 
-        # Decrypt duress chunks
+        # Read all duress chunk ciphertexts and verify the footer chain
+        # before decrypting/writing anything (AUDIT_FINDINGS.md FC-03).
         duress_cts = []
-        bytes_written = 0
+        for i in range(header.duress_chunk_count):
+            ct = read_chunk(f)
+            if ct is None:
+                raise ValueError(f"Unexpected EOF at duress chunk {i}")
+            duress_cts.append(ct)
 
+        stored = read_footer(f)
+        expected = _footer_hmac(duress_keys.footer_auth_key, *duress_cts)
+        if not hmac_mod.compare_digest(stored, expected):
+            raise ValueError("DURESS FOOTER AUTH FAILED")
+
+    bytes_written = 0
+    try:
         with open(output_path, "wb") as out_f:
-            for i in range(header.duress_chunk_count):
+            for i, ct in enumerate(duress_cts):
                 if progress:
                     progress(i, header.duress_chunk_count, "Decrypting...")
-                ct = read_chunk(f)
-                if ct is None:
-                    raise ValueError(f"Unexpected EOF at duress chunk {i}")
-                duress_cts.append(ct)
                 pt = decrypt_chunk(ct, duress_keys, i)
                 remaining = header.duress_data_size - bytes_written
                 out_f.write(pt[:remaining])
                 bytes_written += min(len(pt), remaining)
-
-        # Verify duress footer
-        stored = read_footer(f)
-        expected = _footer_hmac(duress_keys.footer_auth_key, *duress_cts)
-        if not hmac_mod.compare_digest(stored, expected):
-            try: os.unlink(output_path)
-            except OSError: pass
-            raise ValueError("DURESS FOOTER AUTH FAILED")
+    except Exception:
+        try: os.unlink(output_path)
+        except OSError: pass
+        raise
 
     # ══ AUDIT FORK: real data is NOT destroyed ══
-    # The shipping build calls scramble_real_data_section(filepath, header) here.
-    # In the audit fork the input file is left completely intact so the crypto
-    # core can be reviewed without destructive I/O. See SPECIFICATION.md §10.
+    # The shipping build calls scramble_real_data_section(filepath, header) here
+    # (gated behind confirm_duress_wipe -- see AUDIT_FINDINGS.md FC-02). In the
+    # audit fork the input file is left completely intact so the crypto core
+    # can be reviewed without destructive I/O. See SPECIFICATION.md §10.
     if progress:
         progress(header.duress_chunk_count, header.duress_chunk_count, "Done")
 
     return {
         "original_size": header.duress_data_size, "bytes_written": bytes_written,
         "chunks": header.duress_chunk_count, "mode": "decrypted",
-        "verified": True, "duress": True,
+        "verified": True, "duress": True, "real_data_wiped": False,
         "audit_fork_real_data_preserved": True,
     }
 
