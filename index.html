@@ -7,7 +7,7 @@
 <meta name="description" content="A 6-layer double-cascade encryption system with post-quantum key derivation, trap sequences, and duress protection. Python, iOS, and Android — one interoperable file format.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 68'%3E%3Cpath d='M32 2 L58 14 L58 38 C58 52 46 60 32 66 C18 60 6 52 6 38 L6 14 Z' fill='none' stroke='%2300d4ff' stroke-width='3'/%3E%3Ccircle cx='32' cy='33' r='5' fill='%2300d4ff'/%3E%3Crect x='29.5' y='37' width='5' height='11' rx='1.5' fill='%2300d4ff'/%3E%3C/svg%3E">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oxanium:wght@300;400;500;600;700&family=Saira:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oxanium:wght@300;400;500;600;700&family=Saira:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
 
   :root {
     --bg-deep: #0a0c10;
@@ -31,7 +31,7 @@
   body {
     background: var(--bg-deep);
     color: var(--text-primary);
-    font-family: 'Saira', sans-serif;
+    font-family: 'Inter', sans-serif;
     line-height: 1.6;
     overflow-x: hidden;
   }
@@ -72,6 +72,7 @@
     justify-content: space-between;
     padding: 18px 32px;
     background: rgba(10, 12, 16, 0.85);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border);
   }
@@ -486,6 +487,10 @@
     color: var(--text-tertiary);
   }
 
+  footer .fine-print + .fine-print {
+    margin-top: 6px;
+  }
+
   @media (max-width: 720px) {
     .cascade { grid-template-columns: 1fr; }
     .platforms { grid-template-columns: 1fr; }
@@ -512,6 +517,7 @@
     <a href="https://github.com/swatts93/Fortress/blob/main/SPECIFICATION.md">Spec</a>
     <a href="https://github.com/swatts93/Fortress/blob/main/THREAT%20MODEL.md">Threat Model</a>
     <a href="https://github.com/swatts93/Fortress">GitHub</a>
+    <a href="https://fortresscrypt.com">fortresscrypt.com</a>
   </div>
 </nav>
 
@@ -664,13 +670,15 @@ pip install -e ".[pq]"
 
 <footer>
   <div class="footer-links">
+    <a href="https://fortresscrypt.com">fortresscrypt.com</a>
     <a href="https://github.com/swatts93/Fortress">GitHub</a>
     <a href="https://github.com/swatts93/Fortress/blob/main/SPECIFICATION.md">Specification</a>
     <a href="https://github.com/swatts93/Fortress/blob/main/THREAT%20MODEL.md">Threat Model</a>
     <a href="https://github.com/swatts93/Fortress/blob/main/licensing/README.md">Licensing</a>
-    <a href="https://github.com/swatts93/Fortress/blob/main/LICENSE">MIT License</a>
+    <a href="https://github.com/swatts93/Fortress/blob/main/LICENSE">AGPL-3.0 License</a>
   </div>
-  <div class="fine-print">Fortress Crypt · engineering design study, not an audited security product</div>
+  <div class="fine-print">Fortress Crypt is licensed under AGPL-3.0. Logo and brand designs are copyrighted.</div>
+  <div class="fine-print">© 2026 The Lion's Kingdom IT Solutions, LLC</div>
 </footer>
 
 </body>

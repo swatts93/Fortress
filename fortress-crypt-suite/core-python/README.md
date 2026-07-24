@@ -166,4 +166,4 @@ fortress encrypt data.bin --pq-key mykey.pub.json --traps 2 --duress
 
 ## License
 
-MIT
+AGPL-3.0-or-later. See [licensing/](../../licensing/) for the dual-licensing model — a commercial license waiving copyleft obligations is planned for organizations that need to embed Fortress Crypt in closed-source products.

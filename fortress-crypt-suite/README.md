@@ -84,4 +84,4 @@ This system layers well-vetted, standardized primitives (AES, ChaCha20, Camellia
 It has **not** undergone formal third-party cryptographic audit. For protecting real high-value data against sophisticated adversaries, use established, audited tools (VeraCrypt, age, LUKS). Treat Fortress as a serious engineering project and a defense-in-depth design study.
 
 ## License
-MIT
+AGPL-3.0-or-later. See [licensing/](../licensing/) for the dual-licensing model — a commercial license waiving copyleft obligations is planned for organizations that need to embed Fortress Crypt in closed-source products.
