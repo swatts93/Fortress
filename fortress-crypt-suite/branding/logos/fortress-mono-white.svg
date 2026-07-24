@@ -1,14 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="280" height="56" viewBox="0 0 280 56">
-  <g transform="translate(0, 2)">
-    <path d="M24 2 L44 11 L44 28 C44 38 35 44 24 48 C13 44 4 38 4 28 L4 11 Z" 
-          fill="none" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="12" y1="16" x2="36" y2="16" stroke="#fff" stroke-width="1" opacity="0.25"/>
-    <line x1="10" y1="22" x2="38" y2="22" stroke="#fff" stroke-width="1" opacity="0.4"/>
-    <line x1="9" y1="28" x2="39" y2="28" stroke="#fff" stroke-width="1.2" opacity="0.55"/>
-    <line x1="11" y1="34" x2="37" y2="34" stroke="#fff" stroke-width="1" opacity="0.35"/>
-    <circle cx="24" cy="25" r="3" fill="#fff" opacity="0.8"/>
-    <rect x="23" y="27.5" width="2" height="6" rx="0.8" fill="#fff" opacity="0.8"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 219.0625 50.8392">
+  <g transform="translate(-234, -285.9355)">
+    <path d="M256.8125,287.8952l20,9v17c0,10-9,16-20,20-11-4-20-10-20-20v-17l20-9Z" fill="none" stroke="#fff" stroke-linejoin="round" stroke-width="2"/>
+    <line x1="244.8125" y1="301.8952" x2="268.8125" y2="301.8952" fill="none" opacity=".25" stroke="#fff"/>
+    <line x1="242.8125" y1="307.8952" x2="270.8125" y2="307.8952" fill="none" opacity=".4" stroke="#fff"/>
+    <line x1="241.8125" y1="313.8952" x2="271.8125" y2="313.8952" fill="none" opacity=".55" stroke="#fff" stroke-width="1.2"/>
+    <line x1="243.8125" y1="319.8952" x2="269.8125" y2="319.8952" fill="none" opacity=".35" stroke="#fff"/>
+    <path d="M257.6825,313.768c.08.13.13.27.13.43v4.4c0,.44-.36.8-.8.8h-.4c-.44,0-.8-.36-.8-.8v-4.4c0-.16.05-.3.13-.43-1.24-.37-2.13-1.52-2.13-2.87,0-1.66,1.34-3,3-3s3,1.34,3,3c0,1.35-.89,2.5-2.13,2.87Z" fill="#fff"/>
+    <text transform="translate(290.813 316.8952)" fill="#fff" font-family="Oxanium, sans-serif" font-size="28" font-weight="700" letter-spacing=".107em"><tspan x="0" y="0">FORTRESS</tspan></text>
+    <text transform="translate(292.313 330.8952)" fill="#888" font-family="Saira, sans-serif" font-size="10" font-weight="400"><tspan x="0" y="0" letter-spacing=".5em">C</tspan><tspan x="10.75" y="0" letter-spacing=".483em">R</tspan><tspan x="22.3901" y="0" letter-spacing=".5em">YP</tspan><tspan x="45" y="0" letter-spacing=".485em">T</tspan></text>
   </g>
-  <text x="58" y="33" font-family="Oxanium, sans-serif" font-weight="700" font-size="28" fill="#ffffff" letter-spacing="3">FORTRESS</text>
-  <text x="59.5" y="47" font-family="Saira, sans-serif" font-weight="300" font-size="10" fill="#888888" letter-spacing="5">CRYPT</text>
 </svg>

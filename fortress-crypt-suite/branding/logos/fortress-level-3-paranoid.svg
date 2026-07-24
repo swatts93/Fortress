@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="100%" stop-color="#0077a8"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(-486, -361.6111)">
+    <polygon points="522 367.0534 549 383.4882 549 413.6186 522 430.0534 495 413.6186 495 383.4882 522 367.0534" fill="none" stroke="url(#g1)" stroke-width="2.5"/>
+    <g opacity=".4">
+      <polyline points="520.2999 376.3242 522 375.2708 523.7002 376.3242" fill="none" stroke="#00d4ff" stroke-width="1.5"/>
+      <line x1="524.731" y1="376.9629" x2="529.3701" y2="379.8371" fill="none" stroke="#00d4ff" stroke-dasharray="2.4255 1.2127 1.2127 1.2127" stroke-width="1.5"/>
+      <line x1="529.8856" y1="380.1564" x2="539.6792" y2="386.2242" fill="none" stroke="#00d4ff" stroke-dasharray="4.8509 1.2127 2.4255 1.2127 1.2127 1.2127" stroke-width="1.5"/>
+      <polyline points="540.1946 386.5436 541.8947 387.5969 541.8947 389.5969" fill="none" stroke="#00d4ff" stroke-width="1.5"/>
+      <line x1="541.8947" y1="390.7165" x2="541.8947" y2="395.7545" fill="none" stroke="#00d4ff" stroke-dasharray="2.2391 1.1196 1.1196 1.1196" stroke-width="1.5"/>
+      <line x1="541.8947" y1="396.3143" x2="541.8947" y2="406.9502" fill="none" stroke="#00d4ff" stroke-dasharray="4.4783 1.1196 2.2391 1.1196 1.1196 1.1196" stroke-width="1.5"/>
+      <polyline points="541.8947 407.5099 541.8947 409.5099 540.1946 410.5633" fill="none" stroke="#00d4ff" stroke-width="1.5"/>
+      <line x1="539.1637" y1="411.202" x2="534.5246" y2="414.0762" fill="none" stroke="#00d4ff" stroke-dasharray="2.4255 1.2127 1.2127 1.2127" stroke-width="1.5"/>
+      <line x1="534.0092" y1="414.3956" x2="524.2156" y2="420.4633" fill="none" stroke="#00d4ff" stroke-dasharray="4.8509 1.2127 2.4255 1.2127 1.2127 1.2127" stroke-width="1.5"/>
+      <polyline points="523.7002 420.7827 522 421.836 520.2999 420.7827" fill="none" stroke="#00d4ff" stroke-width="1.5"/>
+      <line x1="519.2689" y1="420.144" x2="514.6299" y2="417.2698" fill="none" stroke="#00d4ff" stroke-dasharray="2.4255 1.2127 1.2127 1.2127" stroke-width="1.5"/>
+      <line x1="514.1145" y1="416.9504" x2="504.3208" y2="410.8826" fill="none" stroke="#00d4ff" stroke-dasharray="4.8509 1.2127 2.4255 1.2127 1.2127 1.2127" stroke-width="1.5"/>
+      <polyline points="503.8054 410.5633 502.1052 409.5099 502.1052 407.5099" fill="none" stroke="#00d4ff" stroke-width="1.5"/>
+      <line x1="502.1052" y1="406.3904" x2="502.1052" y2="401.3523" fill="none" stroke="#00d4ff" stroke-dasharray="2.2391 1.1196 1.1196 1.1196" stroke-width="1.5"/>
+      <line x1="502.1052" y1="400.7926" x2="502.1052" y2="390.1567" fill="none" stroke="#00d4ff" stroke-dasharray="4.4783 1.1196 2.2391 1.1196 1.1196 1.1196" stroke-width="1.5"/>
+      <polyline points="502.1052 389.5969 502.1052 387.5969 503.8054 386.5436" fill="none" stroke="#00d4ff" stroke-width="1.5"/>
+      <line x1="504.8363" y1="385.9048" x2="509.4754" y2="383.0306" fill="none" stroke="#00d4ff" stroke-dasharray="2.4255 1.2127 1.2127 1.2127" stroke-width="1.5"/>
+      <line x1="509.9908" y1="382.7113" x2="519.7844" y2="376.6435" fill="none" stroke="#00d4ff" stroke-dasharray="4.8509 1.2127 2.4255 1.2127 1.2127 1.2127" stroke-width="1.5"/>
+    </g>
+    <line x1="502.1053" y1="398.5534" x2="541.8947" y2="398.5534" fill="none" opacity=".3" stroke="#00d4ff"/>
+    <line x1="512.0526" y1="382.1186" x2="531.9474" y2="414.9882" fill="none" opacity=".3" stroke="#00d4ff"/>
+    <line x1="531.9474" y1="382.1186" x2="512.0526" y2="414.9882" fill="none" opacity=".3" stroke="#00d4ff"/>
+    <circle cx="522" cy="398.5534" r="6.3947" fill="#061926" stroke="#00d4ff" stroke-width="2"/>
+    <circle cx="522" cy="398.5534" r="2.4868" fill="#00d4ff"/>
+  </g>
+</svg>

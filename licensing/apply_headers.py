@@ -22,7 +22,7 @@
 apply_headers.py — Insert AGPL-3.0 license headers into source files.
 
 Usage:
-    python3 apply_headers.py --root C:\dev\Fortress\ [--year 2025] [--dry-run]
+    python3 apply_headers.py --root /path/to/fortress-crypt-suite [--year 2025] [--dry-run]
     python3 apply_headers.py --root . --check     # exit 1 if any file is missing a header
 
 Handles .py, .swift, .kt, .c, .h. Skips files that already contain a Fortress

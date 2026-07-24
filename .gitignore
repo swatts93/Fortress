@@ -7,3 +7,6 @@ dist/
 .venv/
 venv/
 .claude/
+.gradle/
+local.properties
+fortress-crypt-suite/branding/favicon/*.png

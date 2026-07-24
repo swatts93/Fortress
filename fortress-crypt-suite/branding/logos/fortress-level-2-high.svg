@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="100%" stop-color="#0077a8"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(-405, -361.6111)">
+    <path d="M441,368.2361l22.5,10v22.5c0,12.5-11.25,21.25-22.5,26.25-11.25-5-22.5-13.75-22.5-26.25v-22.5l22.5-10Z" fill="none" stroke="url(#g1)" stroke-linejoin="round" stroke-width="2.5"/>
+    <line x1="426" y1="385.4861" x2="456" y2="385.4861" fill="none" opacity=".3" stroke="#00d4ff" stroke-width="1.5"/>
+    <line x1="423.5" y1="392.7361" x2="458.5" y2="392.7361" fill="none" opacity=".5" stroke="#00d4ff" stroke-width="1.5"/>
+    <line x1="423.5" y1="399.9861" x2="458.5" y2="399.9861" fill="none" opacity=".7" stroke="#00d4ff" stroke-width="2"/>
+    <line x1="426" y1="407.2361" x2="456" y2="407.2361" fill="none" opacity=".4" stroke="#00d4ff" stroke-width="1.5"/>
+    <path d="M441.97,398.0811c.1801.21.28.48.28.78v3.13c0,.69-.56,1.25-1.25,1.25s-1.25-.56-1.25-1.25v-3.13c0-.3.1-.57.28-.78-1.25-.4-2.15-1.58-2.15-2.97,0-1.73,1.39-3.13,3.12-3.13s3.12,1.4,3.12,3.13c0,1.39-.9,2.57-2.15,2.97Z" fill="#00d4ff" opacity=".9"/>
+  </g>
+</svg>

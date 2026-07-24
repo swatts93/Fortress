@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="100%" stop-color="#005f8a"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(-567, -361.6111)">
+    <path d="M603,366.1111l25.2,10.3091v25.2c0,14.8909-11.4545,22.9091-25.2,27.4909-13.7455-4.5818-25.2-12.6-25.2-27.4909v-25.2l25.2-10.3091Z" fill="none" stroke="url(#g1)" stroke-linejoin="round" stroke-width="3"/>
+    <line x1="586.9636" y1="381.0021" x2="619.0364" y2="381.0021" fill="none" opacity=".25" stroke="#00d4ff" stroke-width="1.5"/>
+    <line x1="584.6727" y1="387.8748" x2="621.3273" y2="387.8748" fill="none" opacity=".4" stroke="#00d4ff" stroke-width="1.5"/>
+    <line x1="583.5273" y1="394.7475" x2="622.4727" y2="394.7475" fill="none" opacity=".6" stroke="#00d4ff" stroke-width="2"/>
+    <line x1="583.5273" y1="401.6202" x2="622.4727" y2="401.6202" fill="none" opacity=".75" stroke="#00d4ff" stroke-width="2"/>
+    <line x1="585.8182" y1="408.493" x2="620.1818" y2="408.493" fill="none" opacity=".55" stroke="#00d4ff" stroke-width="1.5"/>
+    <line x1="590.4" y1="415.3657" x2="615.6" y2="415.3657" fill="none" opacity=".35" stroke="#00d4ff" stroke-width="1.5"/>
+    <path d="M604.06,399.4511c.06.14.09.29.09.45v4.01c0,.63-.52,1.15-1.15,1.15s-1.15-.52-1.15-1.15v-4.01c0-.16.03-.31.09-.45-1.54-.45-2.66-1.87-2.66-3.56,0-2.05,1.66-3.72,3.72-3.72s3.72,1.67,3.72,3.72c0,1.69-1.12,3.11-2.66,3.56Z" fill="#0a0c10"/>
+  </g>
+</svg>

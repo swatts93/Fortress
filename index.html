@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fortress Crypt — 6-layer double-cascade encryption</title>
+<meta name="description" content="A 6-layer double-cascade encryption system with post-quantum key derivation, trap sequences, and duress protection. Python, iOS, and Android — one interoperable file format.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 68'%3E%3Cpath d='M32 2 L58 14 L58 38 C58 52 46 60 32 66 C18 60 6 52 6 38 L6 14 Z' fill='none' stroke='%2300d4ff' stroke-width='3'/%3E%3Ccircle cx='32' cy='33' r='5' fill='%2300d4ff'/%3E%3Crect x='29.5' y='37' width='5' height='11' rx='1.5' fill='%2300d4ff'/%3E%3C/svg%3E">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oxanium:wght@300;400;500;600;700&family=Saira:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+  :root {
+    --bg-deep: #0a0c10;
+    --bg-card: #12151c;
+    --bg-card-hover: #181c25;
+    --border: #1e2330;
+    --text-primary: #e8eaf0;
+    --text-secondary: #8b93a3;
+    --text-tertiary: #5b6272;
+    --accent-cyan: #00d4ff;
+    --accent-amber: #f59e0b;
+    --accent-red: #ef4444;
+    --accent-emerald: #10b981;
+    --grid-line: rgba(0, 212, 255, 0.04);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Saira', sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  a { color: inherit; }
+
+  .bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-glow {
+    position: fixed;
+    width: 700px;
+    height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,212,255,0.07) 0%, transparent 70%);
+    top: -260px;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    background: rgba(10, 12, 16, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Oxanium', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-decoration: none;
+    color: var(--text-primary);
+  }
+
+  .nav-brand svg { display: block; }
+
+  .nav-links {
+    display: flex;
+    gap: 28px;
+    font-family: 'Oxanium', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent-cyan); }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    padding: 100px 32px 70px;
+  }
+
+  .hero .eyebrow {
+    font-family: 'Oxanium', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+    margin-bottom: 20px;
+  }
+
+  .hero h1 {
+    font-family: 'Oxanium', sans-serif;
+    font-weight: 700;
+    font-size: clamp(36px, 6vw, 64px);
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+
+  .hero p.tagline {
+    font-weight: 300;
+    font-size: clamp(15px, 2vw, 19px);
+    color: var(--text-secondary);
+    max-width: 620px;
+    margin: 0 auto 36px;
+  }
+
+  .cta-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: 'Oxanium', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 14px 28px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: var(--accent-cyan);
+    color: #061926;
+  }
+  .btn-primary:hover { background: #33ddff; transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+  .platform-pills {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 28px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    font-family: 'Oxanium', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+  }
+
+  /* SECTIONS */
+  section { padding: 64px 0; }
+  section.alt { border-top: 1px solid var(--border); }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 44px;
+  }
+
+  .section-header h2 {
+    font-family: 'Oxanium', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+    margin-bottom: 10px;
+  }
+
+  .section-header p {
+    color: var(--text-secondary);
+    font-size: 15px;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  /* CASCADE DIAGRAM */
+  .cascade {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .cascade-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+  }
+
+  .cascade-label {
+    font-family: 'Oxanium', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 14px;
+  }
+
+  .cascade-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cascade-step {
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+  }
+
+  .cascade-arrow {
+    text-align: center;
+    color: var(--accent-cyan);
+    font-size: 12px;
+    opacity: 0.6;
+  }
+
+  .cascade-note {
+    grid-column: 1 / -1;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    text-align: center;
+    padding-top: 4px;
+  }
+
+  /* KDF CHAIN */
+  .kdf-chain {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+  }
+
+  .kdf-link {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 14px;
+  }
+
+  .kdf-arrow { color: var(--text-tertiary); }
+
+  .kdf-note {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    margin-top: 22px;
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* TABLES */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 13.5px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    font-family: 'Oxanium', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    background: rgba(255,255,255,0.02);
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  td.mono { font-family: 'Fira Code', monospace; color: var(--accent-cyan); }
+  td.dim { color: var(--text-secondary); }
+
+  .tables-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .table-block h3 {
+    font-family: 'Oxanium', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+  }
+
+  /* PLATFORM CARDS */
+  .platforms {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .platform-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 26px;
+    transition: all 0.2s;
+  }
+
+  .platform-card:hover {
+    border-color: rgba(0,212,255,0.25);
+    transform: translateY(-2px);
+  }
+
+  .platform-card .icon {
+    font-family: 'Oxanium', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .platform-card h3 {
+    font-family: 'Oxanium', sans-serif;
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .platform-card p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+  }
+
+  .platform-card a {
+    font-family: 'Oxanium', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+    text-decoration: none;
+  }
+  .platform-card a:hover { text-decoration: underline; }
+
+  /* QUICKSTART */
+  pre.code-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    overflow-x: auto;
+    color: var(--text-primary);
+    line-height: 1.9;
+  }
+
+  pre.code-block .comment { color: var(--text-tertiary); }
+  pre.code-block .cmd { color: var(--accent-cyan); }
+
+  /* DISCLAIMER */
+  .disclaimer {
+    background: rgba(245, 158, 11, 0.06);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: 10px;
+    padding: 24px 28px;
+  }
+
+  .disclaimer .flag {
+    font-family: 'Oxanium', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent-amber);
+    margin-bottom: 10px;
+  }
+
+  .disclaimer p {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .disclaimer p + p { margin-top: 10px; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 32px 50px;
+    text-align: center;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    font-family: 'Oxanium', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .footer-links a {
+    text-decoration: none;
+    color: var(--text-secondary);
+  }
+  .footer-links a:hover { color: var(--accent-cyan); }
+
+  footer .fine-print {
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  @media (max-width: 720px) {
+    .cascade { grid-template-columns: 1fr; }
+    .platforms { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<nav>
+  <a class="nav-brand" href="#top">
+    <svg width="24" height="26" viewBox="0 0 64 68">
+      <path d="M32 2 L58 14 L58 38 C58 52 46 60 32 66 C18 60 6 52 6 38 L6 14 Z" fill="none" stroke="#00d4ff" stroke-width="4"/>
+      <circle cx="32" cy="33" r="5" fill="#00d4ff"/>
+      <rect x="29.5" y="37" width="5" height="11" rx="1.5" fill="#00d4ff"/>
+    </svg>
+    FORTRESS
+  </a>
+  <div class="nav-links">
+    <a href="#design">Design</a>
+    <a href="#platforms">Platforms</a>
+    <a href="https://github.com/swatts93/Fortress/blob/main/SPECIFICATION.md">Spec</a>
+    <a href="https://github.com/swatts93/Fortress/blob/main/THREAT%20MODEL.md">Threat Model</a>
+    <a href="https://github.com/swatts93/Fortress">GitHub</a>
+  </div>
+</nav>
+
+<div id="top" class="hero">
+  <div class="eyebrow">Defense-in-depth file encryption</div>
+  <h1>FORTRESS CRYPT</h1>
+  <p class="tagline">A 6-layer double-cascade encryption system with post-quantum key derivation, trap sequences, and duress protection — one interoperable file format across Python, iOS, and Android.</p>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="https://github.com/swatts93/Fortress">View on GitHub</a>
+    <a class="btn btn-secondary" href="#quickstart">Quick start</a>
+  </div>
+  <div class="platform-pills">
+    <span class="pill">Python CLI &amp; library</span>
+    <span class="pill">iOS (SwiftUI)</span>
+    <span class="pill">Android (Jetpack Compose)</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <section id="design">
+    <div class="section-header">
+      <h2>Cipher cascade</h2>
+      <p>Every chunk passes through two independent three-cipher passes. An attacker must break all three cipher families, twice, with independent keys — all 12 authentication tags per chunk must verify or decryption halts.</p>
+    </div>
+    <div class="cascade">
+      <div class="cascade-card">
+        <div class="cascade-label">Pass 1 · Key set 1</div>
+        <div class="cascade-steps">
+          <div class="cascade-step">Camellia-256-CBC + HMAC</div>
+          <div class="cascade-arrow">↓</div>
+          <div class="cascade-step">ChaCha20-Poly1305</div>
+          <div class="cascade-arrow">↓</div>
+          <div class="cascade-step">AES-256-GCM</div>
+        </div>
+      </div>
+      <div class="cascade-card">
+        <div class="cascade-label">Pass 2 · Key set 2</div>
+        <div class="cascade-steps">
+          <div class="cascade-step">Camellia-256-CBC + HMAC</div>
+          <div class="cascade-arrow">↓</div>
+          <div class="cascade-step">ChaCha20-Poly1305</div>
+          <div class="cascade-arrow">↓</div>
+          <div class="cascade-step">AES-256-GCM</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt">
+    <div class="section-header">
+      <h2>Key derivation</h2>
+      <p>Two independent memory-hard functions are XOR-combined, so a weakness in either alone does not compromise the master key.</p>
+    </div>
+    <div class="kdf-chain">
+      <span class="kdf-link">password</span>
+      <span class="kdf-arrow">→</span>
+      <span class="kdf-link">Argon2id</span>
+      <span class="kdf-arrow">→</span>
+      <span class="kdf-link">scrypt</span>
+      <span class="kdf-arrow">→</span>
+      <span class="kdf-link">HKDF-SHA512</span>
+      <span class="kdf-arrow">→</span>
+      <span class="kdf-link">master key</span>
+      <span class="kdf-arrow">→</span>
+      <span class="kdf-link">12 sub-keys</span>
+    </div>
+    <p class="kdf-note">Optional ML-KEM-1024 shared secret can be mixed in for post-quantum hybrid mode.</p>
+  </section>
+
+  <section>
+    <div class="section-header">
+      <h2>Security model</h2>
+    </div>
+    <div class="tables-grid">
+      <div class="table-block">
+        <h3>Features</h3>
+        <table>
+          <tr><th>Feature</th><th>Purpose</th></tr>
+          <tr><td class="mono">Key commitment</td><td class="dim">SHA3-512 — prevents key-switching attacks</td></tr>
+          <tr><td class="mono">Dual hash families</td><td class="dim">SHA-2 (header) + SHA-3 (footer) authentication</td></tr>
+          <tr><td class="mono">Anti-forensic padding</td><td class="dim">Random padding per chunk hides content patterns</td></tr>
+          <tr><td class="mono">Trap sequence</td><td class="dim">Ordered codes; a wrong entry destroys the file header</td></tr>
+          <tr><td class="mono">Duress mode</td><td class="dim">Secondary password decrypts decoy data</td></tr>
+          <tr><td class="mono">Constant-time compare</td><td class="dim">All authentication checks resist timing side-channels</td></tr>
+        </table>
+      </div>
+      <div class="table-block">
+        <h3>Security levels</h3>
+        <table>
+          <tr><th>Level</th><th>Argon2id</th><th>scrypt</th><th>Combined memory</th></tr>
+          <tr><td class="mono">standard</td><td class="dim">128 MB</td><td class="dim">~128 MB</td><td class="dim">~256 MB</td></tr>
+          <tr><td class="mono">high</td><td class="dim">512 MB</td><td class="dim">~512 MB</td><td class="dim">~1 GB</td></tr>
+          <tr><td class="mono">paranoid</td><td class="dim">1 GB</td><td class="dim">~1 GB</td><td class="dim">~2 GB (default)</td></tr>
+          <tr><td class="mono">fortress</td><td class="dim">2 GB</td><td class="dim">~2 GB</td><td class="dim">~4 GB</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt" id="quickstart">
+    <div class="section-header">
+      <h2>Quick start</h2>
+      <p>Reference implementation is the Python CLI/library. A <code>.fortress</code> file encrypted on any one platform decrypts on all three.</p>
+    </div>
+    <pre class="code-block"><span class="comment"># install</span>
+cd core-python
+pip install -e ".[pq]"
+
+<span class="comment"># encrypt / decrypt</span>
+<span class="cmd">fortress</span> encrypt secret.pdf --level paranoid
+<span class="cmd">fortress</span> decrypt secret.pdf.fortress</pre>
+  </section>
+
+  <section id="platforms">
+    <div class="section-header">
+      <h2>Platforms</h2>
+    </div>
+    <div class="platforms">
+      <div class="platform-card">
+        <div class="icon">Python</div>
+        <h3>Core library &amp; CLI</h3>
+        <p>The reference implementation. Full API and CLI reference in the package README.</p>
+        <a href="https://github.com/swatts93/Fortress/tree/main/fortress-crypt-suite/core-python">core-python →</a>
+      </div>
+      <div class="platform-card">
+        <div class="icon">iOS</div>
+        <h3>Native SwiftUI app</h3>
+        <p>Open in Xcode. Requires OpenSSL + libargon2 via SPM/CocoaPods.</p>
+        <a href="https://github.com/swatts93/Fortress/tree/main/fortress-crypt-suite/ios">ios →</a>
+      </div>
+      <div class="platform-card">
+        <div class="icon">Android</div>
+        <h3>Jetpack Compose app</h3>
+        <p>Open in Android Studio and run. Crypto via Bouncy Castle + argon2kt — no native compilation.</p>
+        <a href="https://github.com/swatts93/Fortress/tree/main/fortress-crypt-suite/android">android →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt">
+    <div class="disclaimer">
+      <div class="flag">⚠ Not independently audited</div>
+      <p>This system layers well-vetted, standardized primitives (AES, ChaCha20, Camellia, Argon2id, scrypt, ML-KEM) rather than inventing new cryptography — the same principle behind cascade encryption in tools like VeraCrypt. It has <strong>not</strong> undergone formal third-party cryptographic audit.</p>
+      <p>For protecting real high-value data against sophisticated adversaries, use established, audited tools (VeraCrypt, age, LUKS). Treat Fortress as a serious engineering project and a defense-in-depth design study.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="footer-links">
+    <a href="https://github.com/swatts93/Fortress">GitHub</a>
+    <a href="https://github.com/swatts93/Fortress/blob/main/SPECIFICATION.md">Specification</a>
+    <a href="https://github.com/swatts93/Fortress/blob/main/THREAT%20MODEL.md">Threat Model</a>
+    <a href="https://github.com/swatts93/Fortress/blob/main/licensing/README.md">Licensing</a>
+    <a href="https://github.com/swatts93/Fortress/blob/main/LICENSE">MIT License</a>
+  </div>
+  <div class="fine-print">Fortress Crypt · engineering design study, not an audited security product</div>
+</footer>
+
+</body>
+</html>

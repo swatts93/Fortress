@@ -1,21 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="420" height="72" viewBox="0 0 420 72">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 284.774 72">
   <defs>
     <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#0077a8"/>
       <stop offset="100%" stop-color="#004d6e"/>
     </linearGradient>
   </defs>
-  <g transform="translate(0, 4)">
-    <path d="M32 2 L58 14 L58 38 C58 52 46 60 32 66 C18 60 6 52 6 38 L6 14 Z" 
-          fill="none" stroke="url(#g1)" stroke-width="2.5" stroke-linejoin="round"/>
-    <line x1="16" y1="22" x2="48" y2="22" stroke="#0077a8" stroke-width="1.2" opacity="0.25"/>
-    <line x1="14" y1="29" x2="50" y2="29" stroke="#0077a8" stroke-width="1.2" opacity="0.4"/>
-    <line x1="12" y1="36" x2="52" y2="36" stroke="#0077a8" stroke-width="1.5" opacity="0.55"/>
-    <line x1="14" y1="43" x2="50" y2="43" stroke="#0077a8" stroke-width="1.2" opacity="0.4"/>
-    <line x1="18" y1="50" x2="46" y2="50" stroke="#0077a8" stroke-width="1.2" opacity="0.25"/>
-    <circle cx="32" cy="33" r="4" fill="#0077a8" opacity="0.85"/>
-    <rect x="30.5" y="36" width="3" height="8" rx="1" fill="#0077a8" opacity="0.85"/>
+  <rect width="284.774" height="72" fill="#e8eaf0"/>
+  <g transform="translate(-298.613, -185.2515)">
+    <path d="M327.3742,189.2515l26,12v24c0,14-12,22-26,28-14-6-26-14-26-28v-24l26-12Z" fill="none" stroke="url(#g1)" stroke-linejoin="round" stroke-width="2.5"/>
+    <line x1="311.3742" y1="209.2515" x2="343.3742" y2="209.2515" fill="none" opacity=".25" stroke="#0077a8" stroke-width="1.2"/>
+    <line x1="309.3742" y1="216.2515" x2="345.3742" y2="216.2515" fill="none" opacity=".4" stroke="#0077a8" stroke-width="1.2"/>
+    <line x1="307.3742" y1="223.2515" x2="347.3742" y2="223.2515" fill="none" opacity=".55" stroke="#0077a8" stroke-width="1.5"/>
+    <line x1="309.3742" y1="230.2515" x2="345.3742" y2="230.2515" fill="none" opacity=".4" stroke="#0077a8" stroke-width="1.2"/>
+    <line x1="313.3742" y1="237.2515" x2="341.3742" y2="237.2515" fill="none" opacity=".25" stroke="#0077a8" stroke-width="1.2"/>
+    <path d="M328.8274,223.9711c.04.09.05.18.05.28v6c0,.55-.45,1-1,1h-1c-.56,0-1-.45-1-1v-6c0-.1.0099-.19.05-.28-1.49-.57-2.55-2.02-2.55-3.72,0-2.21,1.79-4,4-4s4,1.79,4,4c0,1.7-1.06,3.15-2.55,3.72Z" fill="#0077ab"/>
+    <text transform="translate(373.3747 227.2517)" fill="#0f172a" font-family="Oxanium, sans-serif" font-size="36" font-weight="700" letter-spacing=".111em"><tspan x="0" y="0">FORTRESS</tspan></text>
+    <text transform="translate(375.3747 243.2517)" fill="#64748b" font-family="Saira, sans-serif" font-size="12" font-weight="400"><tspan x="0" y="0" letter-spacing=".5em">C</tspan><tspan x="12.8999" y="0" letter-spacing=".483em">R</tspan><tspan x="26.8682" y="0" letter-spacing=".5em">YP</tspan><tspan x="54" y="0" letter-spacing=".485em">T</tspan></text>
   </g>
-  <text x="78" y="44" font-family="Oxanium, sans-serif" font-weight="700" font-size="36" fill="#0f172a" letter-spacing="4">FORTRESS</text>
-  <text x="80" y="60" font-family="Saira, sans-serif" font-weight="300" font-size="12" fill="#64748b" letter-spacing="6">CRYPT</text>
 </svg>

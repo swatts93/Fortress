@@ -1,18 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="120" height="130" viewBox="0 0 120 130">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
   <defs>
-    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#00d4ff"/>
       <stop offset="100%" stop-color="#0066a0"/>
     </linearGradient>
   </defs>
-  <g transform="translate(60, 65)">
-    <polygon points="0,-48 42,-24 42,24 0,48 -42,24 -42,-24" 
-             fill="none" stroke="url(#g1)" stroke-width="2.5"/>
-    <path d="M-16 -28 L18 -28 L18 -20 L-8 -20 L-8 -6 L14 -6 L14 2 L-8 2 L-8 28 L-16 28 Z" 
-          fill="#00d4ff" opacity="0.9"/>
-    <line x1="-22" y1="-14" x2="-18" y2="-14" stroke="#00d4ff" stroke-width="2" opacity="0.4"/>
-    <line x1="-22" y1="-4" x2="-18" y2="-4" stroke="#00d4ff" stroke-width="2" opacity="0.5"/>
-    <line x1="-22" y1="6" x2="-18" y2="6" stroke="#00d4ff" stroke-width="2" opacity="0.6"/>
-    <line x1="-22" y1="16" x2="-18" y2="16" stroke="#00d4ff" stroke-width="2" opacity="0.5"/>
+  <g transform="translate(-243, -361.6111)">
+    <polygon points="279 366.754 306 382.1826 306 413.0397 279 428.4683 252 413.0397 252 382.1826 279 366.754" fill="none" stroke="url(#g1)" stroke-width="2.5"/>
+    <path d="M268.7143,379.6111h21.8571v5.1429h-16.7143v9h14.1429v5.1429h-14.1429v16.7143h-5.1429v-36Z" fill="#00d4ff" opacity=".9"/>
+    <line x1="264.8571" y1="388.6111" x2="267.4286" y2="388.6111" fill="none" opacity=".4" stroke="#00d4ff" stroke-width="2"/>
+    <line x1="264.8571" y1="395.0397" x2="267.4286" y2="395.0397" fill="none" opacity=".5" stroke="#00d4ff" stroke-width="2"/>
+    <line x1="264.8571" y1="401.4683" x2="267.4286" y2="401.4683" fill="none" opacity=".6" stroke="#00d4ff" stroke-width="2"/>
+    <line x1="264.8571" y1="407.8969" x2="267.4286" y2="407.8969" fill="none" opacity=".5" stroke="#00d4ff" stroke-width="2"/>
   </g>
 </svg>
