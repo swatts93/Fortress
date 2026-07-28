@@ -30,11 +30,11 @@ Pass 1:  Camellia-256-CBC+HMAC → ChaCha20-Poly1305 → AES-256-GCM   (key set 
 Pass 2:  Camellia-256-CBC+HMAC → ChaCha20-Poly1305 → AES-256-GCM   (key set 2)
 ```
 
-An attacker must break all three cipher families, twice, with independent keys. All 12 authentication tags per chunk must verify or decryption halts.
+An attacker must break all three cipher families, twice, with independent keys. All 6 authentication tags per chunk must verify or decryption halts.
 
 ### Key derivation (triple chain)
 ```
-password → Argon2id → scrypt → HKDF-SHA512 → master key → 12 sub-keys
+password → Argon2id → scrypt → HKDF-SHA512 → master key → 11 sub-keys
 ```
 Two independent memory-hard functions (Argon2id and scrypt) are XOR-combined, so a weakness in either alone does not compromise the master key. Optional ML-KEM-1024 shared secret can be mixed in for post-quantum hybrid mode.
 

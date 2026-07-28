@@ -541,7 +541,7 @@
   <section id="design">
     <div class="section-header">
       <h2>Cipher cascade</h2>
-      <p>Every chunk passes through two independent three-cipher passes. An attacker must break all three cipher families, twice, with independent keys — all 12 authentication tags per chunk must verify or decryption halts.</p>
+      <p>Every chunk passes through two independent three-cipher passes. An attacker must break all three cipher families, twice, with independent keys — all 6 authentication tags per chunk must verify or decryption halts.</p>
     </div>
     <div class="cascade">
       <div class="cascade-card">
@@ -583,7 +583,7 @@
       <span class="kdf-arrow">→</span>
       <span class="kdf-link">master key</span>
       <span class="kdf-arrow">→</span>
-      <span class="kdf-link">12 sub-keys</span>
+      <span class="kdf-link">11 sub-keys</span>
     </div>
     <p class="kdf-note">Optional ML-KEM-1024 shared secret can be mixed in for post-quantum hybrid mode.</p>
   </section>

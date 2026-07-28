@@ -32,7 +32,7 @@ PASSWORD ──► Argon2id (2GB) ──► scrypt (2GB) ──► HKDF-SHA512
                   ║       DOUBLE CASCADE (per chunk)         ║
                   ║  Pass 1: Camellia→ChaCha→AES (set 1)    ║
                   ║  Pass 2: Camellia→ChaCha→AES (set 2)    ║
-                  ║  = 6 layers, 12 auth checks              ║
+                  ║  = 6 layers, 6 auth checks               ║
                   ╚══════════════════════════════════════════╝
 ```
 

@@ -50,7 +50,7 @@ All keys are 256 bits unless stated otherwise.
 A Fortress file consists of a **header**, an optional **duress data section**, and
 a **real data section**. Plaintext is split into fixed-size chunks (default
 1 MiB = 1,048,576 bytes). Each chunk is independently encrypted through a
-**double cascade** of six cipher layers and authenticated by twelve tags.
+**double cascade** of six cipher layers and authenticated by six tags.
 
 ```
 plaintext
@@ -62,7 +62,7 @@ plaintext
   → append footer integrity tag
 ```
 
-Decryption reverses each cascade and verifies all twelve authentication tags per
+Decryption reverses each cascade and verifies all six authentication tags per
 chunk; any failure aborts.
 
 ---
@@ -208,7 +208,7 @@ encrypted_chunk = after_p2
 ```
 
 Decryption reverses pass 2 then pass 1; within each pass it verifies GCM, then
-Poly1305, then HMAC-SHA512 before removing PKCS#7 padding. Twelve authentication
+Poly1305, then HMAC-SHA512 before removing PKCS#7 padding. Six authentication
 checks total per chunk (2 passes × [GCM + Poly1305 + HMAC]). Any failure raises
 and aborts.
 
@@ -370,7 +370,7 @@ The design intends to provide:
    {AES-256, ChaCha20, Camellia-256} and at least one of {Argon2id, scrypt}
    remains secure.
 2. **Integrity / tamper-evidence**: any modification of ciphertext, header, or
-   chunk order is detected before plaintext is released, via twelve per-chunk
+   chunk order is detected before plaintext is released, via six per-chunk
    AEAD/HMAC checks, the header HMAC, and the footer chain.
 3. **Password-guessing resistance** proportional to the configured memory-hard
    cost (256 MB – 4 GB per guess).
